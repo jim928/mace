@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# 新的版本 mace
+echo 您刚才输入的内容是: $1
