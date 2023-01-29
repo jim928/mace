@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 # 新的版本 mace 日期
 echo 您刚才输入的内容是: $1
+
+
+#android studio的快捷键配置文件路径举例为
+#/Users/jim/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
+#因此先找到已安装的所有AS不同版本文件夹
