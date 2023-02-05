@@ -1,8 +1,111 @@
 #!/usr/bin/env bash
-# 新的版本 mace 日期
-echo 您刚才输入的内容是: $1
 
+version="0.1.2"
 
-#android studio的快捷键配置文件路径举例为
-#/Users/jim/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
-#因此先找到已安装的所有AS不同版本文件夹
+script_name=$(basename "$0")
+
+usage() {
+  cat <<EOF
+Script name: $script_name
+Description:
+============
+
+This is a script to config environment of mac dev in dev Apps
+
+Examples:
+=========
+    # config for all (AndroidStudio,Xcode)
+    $script_name config
+    # config for AndroidStudio
+    $script_name configas
+    # Show help
+    $script_name -h
+    # Show version
+    $script_name -v
+EOF
+}
+
+configAndroidStudio() {
+  echo "now config for AndroidStudio"
+
+  # shell cheat sheet https://devhints.io/bash
+
+  #homebrew 库的目录 ： /usr/local/Homebrew/Library/Taps/jim928
+
+  #android studio的快捷键配置文件路径举例为
+  #~/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
+  #因此先找到已安装的所有AS不同版本文件夹
+
+  tapPath=/usr/local/Homebrew/Library/Taps/jim928
+  cd tapPath
+
+  #文件夹存在则删除
+  if [ -d "keymapsas" ]; then
+    rm -rf keymapsas
+  fi
+
+  git clone https://github.com/jim928/keymapsas.git
+
+  #find . -name 'AndroidStudio*'
+  cd ~/Library/Application\ Support/Google
+
+  oldifs="$IFS"
+  IFS=$'\n'
+  file_paths=($(find . -name 'AndroidStudio*'))
+  for file in "${file_paths[@]}"; do
+    #    targetPath=${file:2} #将 ./AndroidStudio2021.1 截取为 AndroidStudio2021.1
+    targetPath="${file:2}"
+    echo $targetPath
+    cd $targetPath
+    ls
+
+    if [ -d "keymaps" ]; then
+      echo "dir keymaps exist"
+    else
+      echo "folder /keymaps not exist"
+      #        sudo mkdir /keymaps #文件夹不存在则创建
+    fi
+
+    cp -r /usr/local/Homebrew/Library/Taps/jim928/keymapsas/* ./keymaps/
+  done
+  IFS="$oldifs" # 别忘了把IFS改回去
+}
+
+configXCode(){
+  echo "now config for Xcode"
+}
+
+while (($# > 0)); do # while arguments count>0
+  case "$1" in
+  #    -l | --lang)
+  #        prog_lang=$2
+  #        shift
+  #        ;;
+  #    -d | --dir)
+  #        dir=$2
+  #        shift 2
+  #        ;;
+  -h | --help)
+    usage
+    exit
+    ;;
+  -v | --version)
+    echo ${version}
+    exit
+    ;;
+  "configas")
+    configAndroidStudio
+    exit
+    ;;
+  "config")
+    echo "now config for all"
+    configAndroidStudio
+    configXCode
+    exit
+    ;;
+  *) # unknown flag/switch
+    POSITIONAL+=("$1")
+    shift
+    ;;
+  esac
+done
