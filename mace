@@ -11,6 +11,8 @@ Description:
 ============
 
 This is a script to config environment of mac dev in dev Apps
+~/Library/Application Support/Google
+~/Library/Developer/Xcode/UserData
 
 Examples:
 =========
@@ -31,8 +33,8 @@ EOF
 
 #homebrew 库的目录 ： /usr/local/Homebrew/Library/Taps/jim928
 
-configAndroidStudio() {
-  echo "now config for AndroidStudio"
+configAndroidStudioKeyMaps() {
+  echo "now config for AndroidStudioKeyMaps"
 
   #android studio的快捷键配置文件路径举例为
   #~/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
@@ -63,14 +65,19 @@ configAndroidStudio() {
       echo "dir keymaps exist"
     else
       echo "folder /keymaps not exist"
-      #        sudo mkdir /keymaps #文件夹不存在则创建
+      sudo mkdir -p ./keymaps           #文件夹不存在则创建
+      sudo chown -R $(id -un) ./keymaps # give permissions
     fi
 
     cp -r /usr/local/Homebrew/Library/Taps/jim928/keymapsas/* ./keymaps/
   done
   IFS="$oldifs" # 别忘了把IFS改回去
 
-  echo "configAndroidStudio done"
+  echo "configAndroidStudioKeyMaps done"
+}
+
+configAndroidStudio() {
+  configAndroidStudioKeyMaps
 }
 
 configXCode() {
@@ -92,7 +99,8 @@ configXCode() {
     echo "dir CodeSnippets exist"
   else
     echo "folder /CodeSnippets not exist , now mkdir"
-    sudo mkdir /CodeSnippets #文件夹不存在则创建
+    sudo mkdir -p ./CodeSnippets      #文件夹不存在则创建
+    sudo chown -R $(id -un) ./CodeSnippets # give permissions
   fi
 
   cp -r /usr/local/Homebrew/Library/Taps/jim928/CodeSnippets/* ./CodeSnippets/
@@ -122,7 +130,7 @@ while (($# > 0)); do # while arguments count>0
     exit
     ;;
   "configas")
-    configAndroidStudio
+    configAndroidStudioKeyMaps
     exit
     ;;
   "configxc")
@@ -131,7 +139,7 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "config")
     echo "now config for all"
-    configAndroidStudio
+    configAndroidStudioKeyMaps
     configXCode
     exit
     ;;
