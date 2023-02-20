@@ -33,78 +33,120 @@ EOF
 
 #homebrew 库的目录 ： /usr/local/Homebrew/Library/Taps/jim928
 
-configAndroidStudioKeyMaps() {
-  echo "now config for AndroidStudioKeyMaps"
+configFunc() {
+  taskName=""
+  appPath=""
+  gitUrl=""
+  gitProjectName=""
+  shouldLoop="1"
+  appName=""
+  finalFolder=""
 
-  #android studio的快捷键配置文件路径举例为
-  #~/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
-  #因此先找到已安装的所有AS不同版本文件夹
-
-  cd /usr/local/Homebrew/Library/Taps/jim928
-
-  #文件夹存在则删除
-  if [ -d "keymapsas" ]; then
-    rm -rf keymapsas
+  if [ "$1" = 1 ]; then
+    taskName="AndroidStudioKeyMaps"
+    appPath=~/Library/Application\ Support/Google
+    gitUrl="https://github.com/jim928/keymapsas.git"
+    gitProjectName="keymapsas"
+    shouldLoop="1"
+    appName="AndroidStudio"
+    finalFolder="keymaps"
+  elif [ "$1" = 2 ]; then
+    taskName="AndroidStudioTemplates"
+    appPath=~/Library/Application\ Support/Google
+    gitUrl="https://github.com/jim928/templatesas.git"
+    gitProjectName="templatesas"
+    shouldLoop="1"
+    appName="AndroidStudio"
+    finalFolder="templates"
+  elif [ "$1" = 3 ]; then
+    taskName="XCodeCodeSnippets"
+    appPath=~/Library/Developer/Xcode/UserData
+    gitUrl="https://github.com/jim928/CodeSnippets.git"
+    gitProjectName="CodeSnippets"
+    shouldLoop="0"
+    appName="XCode"
+    finalFolder="CodeSnippets"
   fi
 
-  git clone https://github.com/jim928/keymapsas.git
+  if [[ -z "$taskName" ]]; then
+    echo "unknown task name "
+    return
+  fi
 
-  #find . -name 'AndroidStudio*'
-  cd ~/Library/Application\ Support/Google
+  echo "**********************************"
+  echo "--taskName : $taskName"
+  echo "--appPath : $appPath"
+  echo "--gitUrl : $gitUrl"
+  echo "--gitProjectName : $gitProjectName"
+  echo "--shouldLoop : $shouldLoop"
+  echo "--appName : $appName"
+  echo "--finalFolder : $finalFolder"
 
-  oldifs="$IFS"
-  IFS=$'\n'
-  file_paths=($(find . -name 'AndroidStudio*'))
-  for file in "${file_paths[@]}"; do
-    #    targetPath=${file:2} #将 ./AndroidStudio2021.1 截取为 AndroidStudio2021.1
-    targetPath="${file:2}"
-    echo $targetPath
-    cd $targetPath
+  echo "now start config for task : $taskName"
 
-    if [ -d "keymaps" ]; then
-      echo "dir keymaps exist"
+  cd /usr/local/Homebrew/Library/Taps/jim928
+  #文件夹存在则删除其内容
+  if [ -d "$gitProjectName" ]; then
+    rm -rf ./"$gitProjectName"
+    echo "removing all files in $gitProjectName"
+  fi
+
+  git clone $gitUrl
+
+  cd "$appPath"
+  echo "current path : $appPath"
+
+  if [ $shouldLoop = "1" ]; then
+    #android studio的快捷键配置文件路径举例为
+    #~/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
+    #因此先找到已安装的所有AS不同版本文件夹
+
+    oldifs="$IFS"
+    IFS=$'\n'
+    file_paths=($(find . -name "$appName*"))
+    for file in "${file_paths[@]}"; do
+      #    targetPath=${file:2} #将 ./AndroidStudio2021.1 截取为 AndroidStudio2021.1
+      targetPath="${file:2}"
+      echo $targetPath
+      cd ./"$targetPath"
+
+      if [ -d "$finalFolder" ]; then
+        echo "dir $finalFolder exist"
+      else
+        echo "folder /$finalFolder not exist , now mkdir"
+        sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
+        sudo chown -R $(id -un) ./"$finalFolder" # give permissions
+      fi
+
+      cp -r /usr/local/Homebrew/Library/Taps/jim928/$gitProjectName/* ./"$finalFolder"/
+    done
+    IFS="$oldifs" # 别忘了把IFS改回去
+  else
+    if [ -d "CodeSnippets" ]; then
+      echo "dir CodeSnippets exist"
     else
-      echo "folder /keymaps not exist"
-      sudo mkdir -p ./keymaps           #文件夹不存在则创建
-      sudo chown -R $(id -un) ./keymaps # give permissions
+      echo "folder /CodeSnippets not exist , now mkdir"
+      sudo mkdir -p ./CodeSnippets           #文件夹不存在则创建
+      sudo chown -R $(id -un) ./CodeSnippets # give permissions
     fi
 
-    cp -r /usr/local/Homebrew/Library/Taps/jim928/keymapsas/* ./keymaps/
-  done
-  IFS="$oldifs" # 别忘了把IFS改回去
+    cp -r /usr/local/Homebrew/Library/Taps/jim928/CodeSnippets/* ./CodeSnippets/
+  fi
 
-  echo "configAndroidStudioKeyMaps done"
+  echo "task $taskName done"
+}
+
+testFunc() {
+  configFunc 3
 }
 
 configAndroidStudio() {
-  configAndroidStudioKeyMaps
+  configFunc 1
+  configFunc 2
 }
 
 configXCode() {
-  echo "now config for Xcode"
-
-  cd /usr/local/Homebrew/Library/Taps/jim928
-
-  #文件夹存在则删除
-  if [ -d "CodeSnippets" ]; then
-    rm -rf CodeSnippets
-  fi
-
-  git clone https://github.com/jim928/CodeSnippets.git
-
-  #find . -name 'AndroidStudio*'
-  cd ~/Library/Developer/Xcode/UserData
-
-  if [ -d "CodeSnippets" ]; then
-    echo "dir CodeSnippets exist"
-  else
-    echo "folder /CodeSnippets not exist , now mkdir"
-    sudo mkdir -p ./CodeSnippets      #文件夹不存在则创建
-    sudo chown -R $(id -un) ./CodeSnippets # give permissions
-  fi
-
-  cp -r /usr/local/Homebrew/Library/Taps/jim928/CodeSnippets/* ./CodeSnippets/
-  echo "configXCode Done"
+  configFunc 3
 }
 
 pushXCode() {
@@ -130,7 +172,7 @@ while (($# > 0)); do # while arguments count>0
     exit
     ;;
   "configas")
-    configAndroidStudioKeyMaps
+    configAndroidStudio
     exit
     ;;
   "configxc")
@@ -139,8 +181,13 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "config")
     echo "now config for all"
-    configAndroidStudioKeyMaps
+    configAndroidStudio
     configXCode
+    exit
+    ;;
+  "test")
+    echo "test function"
+    testFunc
     exit
     ;;
   *) # unknown flag/switch
