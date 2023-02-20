@@ -14,6 +14,15 @@ This is a script to config environment of mac dev in dev Apps
 ~/Library/Application Support/Google
 ~/Library/Developer/Xcode/UserData
 
+how to publish new version of mace;
+1,new code in mace git project and commit and push;
+2,make new tag from the last commit and push;
+3,make new release from the tag just made;
+4,right click and copy the link from the release : Source code (tar.gz);
+5,open terminal , and use command : brew create linkJustCopied;
+6,input the formulaName : mace and copy the sha256 value;
+7,update the link and the sha256 to the git project : homebrew-mace and push;
+
 Examples:
 =========
     # config for all (AndroidStudio,Xcode)
