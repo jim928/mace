@@ -183,6 +183,9 @@ configIdea() {
 pushXCode() {
   echo "now push code to github for XCode"
 }
+pushIdeaC() {
+  echo "now push config to github"
+}
 
 while (($# > 0)); do # while arguments count>0
   case "$1" in
@@ -219,6 +222,10 @@ while (($# > 0)); do # while arguments count>0
     configAndroidStudio
     configXCode
     configIdea
+    exit
+    ;;
+  "pushidea")
+    pushIdeaC
     exit
     ;;
   "test")
