@@ -23,6 +23,7 @@ how to publish new version of mace;
 5,open terminal , and use command : brew create linkJustCopied;
 6,input the formulaName : mace and copy the sha256 value;
 7,update the link and the sha256 to the git project : homebrew-mace and push;
+8,delete the mace.rb file created in step 7;
 
 Examples:
 =========
