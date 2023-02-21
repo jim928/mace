@@ -218,6 +218,7 @@ while (($# > 0)); do # while arguments count>0
     echo "now config for all"
     configAndroidStudio
     configXCode
+    configIdea
     exit
     ;;
   "test")
