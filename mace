@@ -13,6 +13,7 @@ Description:
 This is a script to config environment of mac dev in dev Apps
 ~/Library/Application Support/Google
 ~/Library/Developer/Xcode/UserData
+/usr/local/Homebrew/Library/Taps/jim928
 
 how to publish new version of mace;
 1,new code in mace git project and commit and push;
@@ -75,6 +76,22 @@ configFunc() {
     shouldLoop="0"
     appName="XCode"
     finalFolder="CodeSnippets"
+  elif [ "$1" = 5 ]; then
+    taskName="IntellijIdeaCKeyMaps"
+    appPath=~/Library/Application\ Support/JetBrains
+    gitUrl="https://github.com/jim928/keymapsideaC.git"
+    gitProjectName="keymapsideaC"
+    shouldLoop="1"
+    appName="IdeaIC"
+    finalFolder="keymaps"
+  elif [ "$1" = 6 ]; then
+    taskName="AndroidStudioTemplates"
+    appPath=~/Library/Application\ Support/JetBrains
+    gitUrl="https://github.com/jim928/templatesideaC.git"
+    gitProjectName="templatesideaC"
+    shouldLoop="1"
+    appName="IdeaIC"
+    finalFolder="templates"
   fi
 
   if [[ -z "$taskName" ]]; then
@@ -158,6 +175,10 @@ configXCode() {
   configFunc 3
 }
 
+configIdea() {
+  configFunc 5
+  configFunc 6
+}
 pushXCode() {
   echo "now push code to github for XCode"
 }
@@ -186,6 +207,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "configxc")
     configXCode
+    exit
+    ;;
+  "configidea")
+    configIdea
     exit
     ;;
   "config")
