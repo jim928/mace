@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.4"
+version="0.1.5"
 
 script_name=$(basename "$0")
 
@@ -37,6 +37,14 @@ Examples:
     $script_name -h
     # Show version
     $script_name -v
+    # push local change to github for AndroidStudio templates
+    $script_name pushas
+    # push local change to github for XCode CodeSnippets
+    $script_name pushxc
+    # push local change to github for IdeaIC templates
+    $script_name pushidea
+    # push local change to github for templates and CodeSnippets
+    $script_name push
 EOF
 }
 
@@ -145,7 +153,8 @@ configFunc() {
         sudo chown -R $(id -un) ./"$finalFolder" # give permissions
       fi
 
-      cp -r /usr/local/Homebrew/Library/Taps/jim928/$gitProjectName/* ./"$finalFolder"/
+      #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
+      yes | cp -r /usr/local/Homebrew/Library/Taps/jim928/$gitProjectName/. ./"$finalFolder"/
     done
     IFS="$oldifs" # 别忘了把IFS改回去
   else
@@ -157,14 +166,15 @@ configFunc() {
       sudo chown -R $(id -un) ./"$finalFolder" # give permissions
     fi
 
-    cp -r /usr/local/Homebrew/Library/Taps/jim928/CodeSnippets/* ./CodeSnippets/
+    #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
+    yes | cp -r /usr/local/Homebrew/Library/Taps/jim928/$gitProjectName/. ./"$finalFolder"/
   fi
 
   echo "task $taskName done"
 }
 
 testFunc() {
-  configFunc 3
+  echo "textFunc"
 }
 
 configAndroidStudio() {
@@ -180,11 +190,110 @@ configIdea() {
   configFunc 5
   configFunc 6
 }
+
+pushFuc() {
+  taskName=""
+  appPath=""
+  gitUrl=""
+  shouldLoop="1"
+  appName=""
+  finalFolder=""
+
+  if [ "$1" = 2 ]; then
+    taskName="AndroidStudioTemplates"
+    appPath=~/Library/Application\ Support/Google
+    gitUrl="https://github.com/jim928/templatesas.git"
+    gitProjectName="templatesas"
+    shouldLoop="1"
+    appName="AndroidStudio"
+    finalFolder="templates"
+  elif [ "$1" = 3 ]; then
+    taskName="XCodeCodeSnippets"
+    appPath=~/Library/Developer/Xcode/UserData
+    gitUrl="https://github.com/jim928/CodeSnippets.git"
+    gitProjectName="CodeSnippets"
+    shouldLoop="0"
+    appName="XCode"
+    finalFolder="CodeSnippets"
+  elif [ "$1" = 6 ]; then
+    taskName="AndroidStudioTemplates"
+    appPath=~/Library/Application\ Support/JetBrains
+    gitUrl="https://github.com/jim928/templatesideaC.git"
+    gitProjectName="templatesideaC"
+    shouldLoop="1"
+    appName="IdeaIC"
+    finalFolder="templates"
+  fi
+
+  if [[ -z "$taskName" ]]; then
+    echo "unknown task name "
+    return
+  fi
+
+  cd "$appPath"
+  echo "current path : $appPath"
+
+  if [ $shouldLoop = "1" ]; then
+    #android studio的快捷键配置文件路径举例为
+    #~/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
+    #因此先找到已安装的所有AS不同版本文件夹
+
+    oldifs="$IFS"
+    IFS=$'\n'
+    file_paths=($(find . -name "$appName*"))
+    for file in "${file_paths[@]}"; do
+      #    targetPath=${file:2} #将 ./AndroidStudio2021.1 截取为 AndroidStudio2021.1
+      targetPath="${file:2}"
+      echo $targetPath
+      cd ./"$targetPath"
+
+      if [ -d "$finalFolder" ]; then
+        echo "dir $finalFolder exist"
+        cd ./"$finalFolder"
+
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "there is change to push , now commit and push"
+          git add .
+          git commit -m "triggled by auto check from mace}." -a
+          git push "${gitUrl}" HEAD:master
+        else
+          echo "nothing to update."
+        fi
+      else
+        echo "folder /$finalFolder not exist , no need to push"
+      fi
+
+    done
+    IFS="$oldifs" # 别忘了把IFS改回去
+  else
+    if [ -d "$finalFolder" ]; then
+      echo "dir $finalFolder exist"
+      cd ./"$finalFolder"
+
+      if [ -n "$(git status --porcelain)" ]; then
+        echo "there is change to push , now commit and push"
+        git add .
+        git commit -m "triggled by auto check from mace}." -a
+        git push "${gitUrl}" HEAD:master
+      else
+        echo "nothing to update."
+      fi
+    else
+      echo "folder /$finalFolder not exist , no need to push"
+    fi
+  fi
+
+  echo "task $taskName done"
+}
+
+pushAndroidStudio() {
+  pushFuc 2
+}
 pushXCode() {
-  echo "now push code to github for XCode"
+  pushFuc 3
 }
 pushIdeaC() {
-  echo "now push config to github"
+  pushFuc 6
 }
 
 while (($# > 0)); do # while arguments count>0
@@ -224,7 +333,22 @@ while (($# > 0)); do # while arguments count>0
     configIdea
     exit
     ;;
+  "pushas")
+    pushAndroidStudio
+    exit
+    ;;
+  "pushxc")
+    pushXCode
+    exit
+    ;;
+
   "pushidea")
+    pushIdeaC
+    exit
+    ;;
+  "push")
+    pushAndroidStudio
+    pushXCode
     pushIdeaC
     exit
     ;;
