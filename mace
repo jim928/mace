@@ -149,12 +149,12 @@ configFunc() {
     done
     IFS="$oldifs" # 别忘了把IFS改回去
   else
-    if [ -d "CodeSnippets" ]; then
-      echo "dir CodeSnippets exist"
+    if [ -d "$finalFolder" ]; then
+      echo "dir $finalFolder exist"
     else
-      echo "folder /CodeSnippets not exist , now mkdir"
-      sudo mkdir -p ./CodeSnippets           #文件夹不存在则创建
-      sudo chown -R $(id -un) ./CodeSnippets # give permissions
+      echo "folder /$finalFolder not exist , now mkdir"
+      sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
+      sudo chown -R $(id -un) ./"$finalFolder" # give permissions
     fi
 
     cp -r /usr/local/Homebrew/Library/Taps/jim928/CodeSnippets/* ./CodeSnippets/
