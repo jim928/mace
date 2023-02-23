@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-version="0.1.5"
+version="0.1.6"
 
 script_name=$(basename "$0")
+jim928Path=$(brew --repo)/Library/Taps/jim928
 
 usage() {
   cat <<EOF
@@ -13,7 +14,11 @@ Description:
 This is a script to config environment of mac dev in dev Apps
 ~/Library/Application Support/Google
 ~/Library/Developer/Xcode/UserData
-/usr/local/Homebrew/Library/Taps/jim928
+
+jim@jimdeMBP ~ % brew --repo
+/usr/local/Homebrew
+jim@jimdeMBP ~ % brew --repo jim928/mace
+/usr/local/Homebrew/Library/Taps/jim928/homebrew-mace
 
 how to publish new version of mace;
 1,new code in mace git project and commit and push;
@@ -23,7 +28,7 @@ how to publish new version of mace;
 5,open terminal , and use command : brew create linkJustCopied;
 6,input the formulaName : mace and copy the sha256 value;
 7,update the link and the sha256 to the git project : homebrew-mace and push;
-8,delete the mace.rb file created in step 7;
+8,delete the mace.rb file created in step 7;  (use deleterb command)
 
 Examples:
 =========
@@ -45,12 +50,14 @@ Examples:
     $script_name pushidea
     # push local change to github for templates and CodeSnippets
     $script_name push
+    # find and delete the mace.rb file in update steps
+    $script_name deleterb
 EOF
 }
 
 # shell cheat sheet https://devhints.io/bash
 
-#homebrew 库的目录 ： /usr/local/Homebrew/Library/Taps/jim928
+#homebrew 库的目录 ： jim928Path
 
 configFunc() {
   taskName=""
@@ -94,7 +101,7 @@ configFunc() {
     appName="IdeaIC"
     finalFolder="keymaps"
   elif [ "$1" = 6 ]; then
-    taskName="AndroidStudioTemplates"
+    taskName="IntellijIdeaCTemplates"
     appPath=~/Library/Application\ Support/JetBrains
     gitUrl="https://github.com/jim928/templatesideaC.git"
     gitProjectName="templatesideaC"
@@ -119,7 +126,8 @@ configFunc() {
 
   echo "now start config for task : $taskName"
 
-  cd /usr/local/Homebrew/Library/Taps/jim928
+  cd "$jim928Path" || echo "cd to path failed :$jim928Path"
+
   #文件夹存在则删除其内容
   if [ -d "$gitProjectName" ]; then
     rm -rf ./"$gitProjectName"
@@ -154,7 +162,7 @@ configFunc() {
       fi
 
       #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
-      yes | cp -r /usr/local/Homebrew/Library/Taps/jim928/$gitProjectName/. ./"$finalFolder"/
+      yes | cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
     done
     IFS="$oldifs" # 别忘了把IFS改回去
   else
@@ -167,14 +175,14 @@ configFunc() {
     fi
 
     #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
-    yes | cp -r /usr/local/Homebrew/Library/Taps/jim928/$gitProjectName/. ./"$finalFolder"/
+    yes | cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
   fi
 
   echo "task $taskName done"
 }
 
 testFunc() {
-  echo "textFunc"
+  echo "$jim928Path"
 }
 
 configAndroidStudio() {
@@ -189,6 +197,11 @@ configXCode() {
 configIdea() {
   configFunc 5
   configFunc 6
+}
+
+deleterb() {
+  cd $(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
+  rm ./mace.rb
 }
 
 pushFuc() {
@@ -216,7 +229,7 @@ pushFuc() {
     appName="XCode"
     finalFolder="CodeSnippets"
   elif [ "$1" = 6 ]; then
-    taskName="AndroidStudioTemplates"
+    taskName="IntellijIdeaCTemplates"
     appPath=~/Library/Application\ Support/JetBrains
     gitUrl="https://github.com/jim928/templatesideaC.git"
     gitProjectName="templatesideaC"
@@ -350,6 +363,10 @@ while (($# > 0)); do # while arguments count>0
     pushAndroidStudio
     pushXCode
     pushIdeaC
+    exit
+    ;;
+  "deleterb")
+    deleterb
     exit
     ;;
   "test")
