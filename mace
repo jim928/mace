@@ -52,6 +52,8 @@ Examples:
     $script_name push
     # find and delete the mace.rb file in update steps
     $script_name deleterb
+    # generate id_ed25519 sshkey if not exist,and copy to clipboard
+    $script_name sshkey
 EOF
 }
 
@@ -151,9 +153,6 @@ configFunc() {
         rm -rf "$finalFolder"
       fi
 
-      sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
-      sudo chown -R $(id -un) ./"$finalFolder" # give permissions
-
       #clone的时候修改文件名称为 finalFolder
       git clone "$gitUrl" "$finalFolder"
     done
@@ -164,9 +163,6 @@ configFunc() {
       rm -rf "$finalFolder"
     fi
 
-    sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
-    sudo chown -R $(id -un) ./"$finalFolder" # give permissions
-
     #clone的时候修改文件名称为 finalFolder
     git clone "$gitUrl" "$finalFolder"
   fi
@@ -175,8 +171,17 @@ configFunc() {
 }
 
 testFunc() {
-  configFunc 2
-  #  pushFuc 2
+
+  FILE=~/.ssh/id_ed25519.pub
+  if test -f "$FILE"; then
+    echo "$FILE exist"
+  else
+    echo "generate now"
+    ssh-keygen -t ed25519 -C "<$(date +%Y%m%d)$USER>"
+  fi
+  echo "now its in clipboard"
+  tr -d '\n' <~/.ssh/id_ed25519.pub | pbcopy
+
 }
 
 configAndroidStudio() {
@@ -196,6 +201,18 @@ configIdea() {
 deleterb() {
   cd $(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
   rm ./mace.rb
+}
+
+getSSHKey() {
+  FILE=~/.ssh/id_ed25519.pub
+  if test -f "$FILE"; then
+    echo "$FILE exist"
+  else
+    echo "generate now"
+    ssh-keygen -t ed25519 -C "<$(date +%Y%m%d)$USER>"
+  fi
+  echo "now its in clipboard"
+  tr -d '\n' <~/.ssh/id_ed25519.pub | pbcopy
 }
 
 pushFuc() {
@@ -355,6 +372,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "deleterb")
     deleterb
+    exit
+    ;;
+  "sshkey")
+    getSSHKey
     exit
     ;;
   "test")
