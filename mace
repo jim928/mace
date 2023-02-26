@@ -162,7 +162,7 @@ configFunc() {
       fi
 
       #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
-      yes | cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
+      sudo cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
     done
     IFS="$oldifs" # 别忘了把IFS改回去
   else
@@ -175,7 +175,7 @@ configFunc() {
     fi
 
     #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
-    yes | cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
+    sudo cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
   fi
 
   echo "task $taskName done"
