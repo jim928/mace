@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.8"
+version="0.1.9"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -57,6 +57,19 @@ Examples:
 EOF
 }
 
+githubHelp() {
+  cat <<EOF
+1，settings
+2，Developer settings
+3, Personal access tokens
+4, Generate new token
+5, set expiration and repo access check
+6, generate 复制好生成的token内容
+7, brew install gh
+8, gh auth login
+9, GitHub.com -> HTTPS -> y -> Login with a web browser
+EOF
+}
 # shell cheat sheet https://devhints.io/bash
 
 #homebrew 库的目录 ： jim928Path
@@ -376,6 +389,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "sshkey")
     getSSHKey
+    exit
+    ;;
+  "github")
+    githubHelp
     exit
     ;;
   "test")
