@@ -134,9 +134,6 @@ configFunc() {
     echo "removing all files in $gitProjectName"
   fi
 
-  git clone $gitUrl
-
-
   cd "$appPath"
   echo "current path : $appPath"
 
@@ -150,36 +147,36 @@ configFunc() {
       cd "$i"
 
       if [ -d "$finalFolder" ]; then
-        echo "dir $finalFolder exist"
-      else
-        echo "folder /$finalFolder not exist , now mkdir"
-        sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
-        sudo chown -R $(id -un) ./"$finalFolder" # give permissions
+        echo "dir $finalFolder exist, now delete it and mkdir"
+        rm -rf "$finalFolder"
       fi
 
-      #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
-      sudo cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
-    done
+      sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
+      sudo chown -R $(id -un) ./"$finalFolder" # give permissions
 
+      #clone的时候修改文件名称为 finalFolder
+      git clone "$gitUrl" "$finalFolder"
+    done
   else
 
     if [ -d "$finalFolder" ]; then
-      echo "dir $finalFolder exist"
-    else
-      echo "folder /$finalFolder not exist , now mkdir"
-      sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
-      sudo chown -R $(id -un) ./"$finalFolder" # give permissions
+      echo "dir $finalFolder exist, now delete it and mkdir"
+      rm -rf "$finalFolder"
     fi
 
-    #使用.而不是* 可以隐藏文件一起复制， 用yes可以在重复文件覆盖的时候免去输入yes确认
-    sudo cp -r "$jim928Path"/$gitProjectName/. ./"$finalFolder"/
+    sudo mkdir -p ./"$finalFolder"           #文件夹不存在则创建
+    sudo chown -R $(id -un) ./"$finalFolder" # give permissions
+
+    #clone的时候修改文件名称为 finalFolder
+    git clone "$gitUrl" "$finalFolder"
   fi
 
   echo "task $taskName done"
 }
 
 testFunc() {
-  echo "$jim928Path"
+  configFunc 2
+  #  pushFuc 2
 }
 
 configAndroidStudio() {
