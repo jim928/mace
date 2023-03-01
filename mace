@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.10"
+version="0.1.11"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -185,15 +185,7 @@ configFunc() {
 
 testFunc() {
 
-  FILE=~/.ssh/id_ed25519.pub
-  if test -f "$FILE"; then
-    echo "$FILE exist"
-  else
-    echo "generate now"
-    ssh-keygen -t ed25519 -C "<$(date +%Y%m%d)$USER>"
-  fi
-  echo "now its in clipboard"
-  tr -d '\n' <~/.ssh/id_ed25519.pub | pbcopy
+  openGoogleFolder
 
 }
 
@@ -214,6 +206,16 @@ configIdea() {
 deleterb() {
   cd $(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
   rm ./mace.rb
+}
+
+openGoogleFolder() {
+  open ~/Library/Application\ Support/Google
+}
+openUserDataFolder() {
+  open ~/Library/Developer/Xcode/UserData
+}
+openJetBrainFolder() {
+  open ~/Library/Application\ Support/JetBrains
 }
 
 getSSHKey() {
@@ -411,6 +413,18 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "github")
     githubHelp
+    exit
+    ;;
+  "opengoogle")
+    openGoogleFolder
+    exit
+    ;;
+  "openuserdata")
+    openUserDataFolder
+    exit
+    ;;
+  "openjetbrain")
+    openJetBrainFolder
     exit
     ;;
   "test")
