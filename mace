@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.11"
+version="0.1.12"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -149,7 +149,7 @@ configFunc() {
     echo "removing all files in $gitProjectName"
   fi
 
-  cd "$appPath"
+  cd "$appPath" || echo "cd to path failed :$appPath"
   echo "current path : $appPath"
 
   if [ $shouldLoop = "1" ]; then
@@ -159,7 +159,7 @@ configFunc() {
 
     for i in "$appPath"/"$appName"*; do
       echo "$i"
-      cd "$i"
+      cd "$i" || echo "cd to path failed :$i"
 
       if [ -d "$finalFolder" ]; then
         echo "dir $finalFolder exist, now delete it and mkdir"
@@ -204,7 +204,8 @@ configIdea() {
 }
 
 deleterb() {
-  cd $(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
+  deletePath=$(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
+  cd deletePath || echo "cd to path failed :$deletePath"
   rm ./mace.rb
 }
 
@@ -285,7 +286,7 @@ pushFuc() {
     return
   fi
 
-  cd "$appPath"
+  cd "$appPath" || echo "cd to path failed :$appPath"
   echo "current path : $appPath"
 
   if [ $shouldLoop = "1" ]; then
@@ -295,11 +296,11 @@ pushFuc() {
 
     for i in "$appPath"/"$appName"*; do
       echo "$i"
-      cd "$i"
+      cd "$i" || echo "cd to path failed :$i"
 
       if [ -d "$finalFolder" ]; then
         echo "dir $finalFolder exist"
-        cd ./"$finalFolder"
+        cd ./"$finalFolder" || echo "cd to path failed :$finalFolder"
 
         if [ -n "$(git status --porcelain)" ]; then
           echo "there is change to push , now commit and push"
@@ -318,7 +319,7 @@ pushFuc() {
 
     if [ -d "$finalFolder" ]; then
       echo "dir $finalFolder exist"
-      cd ./"$finalFolder"
+      cd ./"$finalFolder" || echo "cd to path failed :$finalFolder"
 
       if [ -n "$(git status --porcelain)" ]; then
         echo "there is change to push , now commit and push"
