@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.13"
+version="0.1.14"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -204,9 +204,10 @@ configIdea() {
 }
 
 deleterb() {
-  deletePath=$(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
-  cd deletePath || echo "cd to path failed :$deletePath"
-  rm ./mace.rb
+  find $(brew --repo)/Library/Taps -name 'mace.rb' -type f -print -exec rm -rf {} \;
+#  deletePath=$(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
+#  cd deletePath || echo "cd to path failed :$deletePath"
+#  rm ./mace.rb
 }
 
 openGoogleFolder() {
