@@ -4,6 +4,9 @@ version="0.1.45"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
+maceWorkDir="$HOME/.mace"
+maceGitUrl="https://jim928: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@github.com/jim928/mace.git"
+homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
 
 usage() {
   cat <<EOF
@@ -183,12 +186,6 @@ configFunc() {
   echo "task $taskName done"
 }
 
-testFunc() {
-
-  openGoogleFolder
-
-}
-
 configAndroidStudio() {
   configFunc 1
   configFunc 2
@@ -204,10 +201,7 @@ configIdea() {
 }
 
 deleterb() {
-  find $(brew --repo)/Library/Taps -name 'mace.rb' -type f -print -exec rm -rf {} \;
-#  deletePath=$(brew --repo)/Library/Taps/homebrew/homebrew-core/Formula
-#  cd deletePath || echo "cd to path failed :$deletePath"
-#  rm ./mace.rb
+  find $(brew --repo)/Library/Taps/homebrew/homebrew-core -name 'mace.rb' -type f -print -exec rm -rf {} \;
 }
 
 openGoogleFolder() {
@@ -349,6 +343,189 @@ pushIdeaC() {
   pushFuc 5
   pushFuc 6
 }
+#################### test func ####################
+testFunc() {
+  echo "testFunc"
+  makeASOpen
+}
+####################### make open in android studio work flow  ####################
+makeASOpen() {
+  createMaceFolder
+  createZSHRC
+  cd "$maceWorkDir" || echo "cd to path failed :$maceWorkDir"
+  if [ -d "publicfiles" ]; then
+    echo "dir publicfiles exist"
+  else
+    echo "dir publicfiles not exist, now clone"
+    git clone https://github.com/jim928/publicfiles.git
+  fi
+  echo "coping publicfiles to ~/Library/Services/"
+  cp -r publicfiles/* ~/Library/Services/
+}
+createMaceFolder() {
+  if [ ! -d "$maceWorkDir" ]; then
+    mkdir "$maceWorkDir"
+  fi
+}
+createZSHRC() {
+  #!/bin/bash
+  zshrc_path="$HOME/.zshrc"
+  # 检查是否存在 .zshrc 文件
+  if [ ! -f "$zshrc_path" ]; then
+    # 如果不存在，则创建 .zshrc 文件
+    echo "Creating .zshrc file..."
+    touch "$zshrc_path"
+
+    # 在 .zshrc 文件中添加一些示例内容
+    echo '#this is a new .zshrc' >>"$zshrc_path"
+    echo 'export PATH=/Applications/Android\ Studio.app/Contents/MacOS/' >>"$zshrc_path"
+
+    echo "Done! You can customize the .zshrc file as needed."
+    source "$zshrc_path"
+  else
+    echo ".zshrc file already exists."
+  fi
+}
+
+####################### mace work foler ####################
+makeMaceWorkFolder() {
+  createMaceFolder
+  cd "$maceWorkDir" || echo "cd to path failed :$maceWorkDir"
+  git clone "${maceGitUrl}"
+}
+
+#################### publish new version of mace ####################
+publishNewVersion() {
+  cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
+
+  git fetch --all --tags
+  git pull
+
+  # 修改版本号
+  # 获取当前文件夹下 mace 文件的版本号
+  current_version=$(grep 'version=' mace | awk -F\" '{print $2}')
+
+  # 将版本号拆分为数组
+  IFS='.' read -ra version_array <<<"$current_version"
+
+  # 递增最后一个元素
+  ((version_array[${#version_array[@]} - 1]++))
+
+  # 将数组重新组装为新版本号
+  new_version=$(
+    IFS='.'
+    echo "${version_array[*]}"
+  )
+
+  # 使用 sed 命令替换文件中的 version 变量
+  sed -i.bak "s/version=\"$current_version\"/version=\"$new_version\"/" mace
+
+  # 输出新版本号
+  echo "Old Version: $current_version"
+  echo "New Version: $new_version"
+
+  git add .
+  git commit -m "publishMac commit from mace}." -a
+  git push "${maceGitUrl}" HEAD:master
+
+  # 将数组重新组装为新版本号
+  new_version=$(
+    IFS='.'
+    echo "${version_array[*]}"
+  )
+
+  # 创建新 tag
+  git tag -a "$new_version" -m "$new_version"
+
+  # 推送新 tag 到远程仓库
+  git push origin "$new_version"
+
+  ########## release new version to github ########
+  # Replace with your GitHub username and repository name
+  USERNAME="jim928"
+  REPO="mace"
+
+  # Replace with the tag name you want to create a release from
+  TAG="$new_version"
+
+  # GitHub Personal Access Token for authentication
+  TOKEN="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"
+
+  # Release notes for the new release
+  RELEASE_NOTES="Release notes for version $TAG"
+
+  # Create a release using the GitHub API
+  response=$(curl -s -X POST \
+    -H "Authorization: token $TOKEN" \
+    -H "Accept: application/vnd.github.v3+json" \
+    "https://api.github.com/repos/$USERNAME/$REPO/releases" \
+    -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
+
+  # Print the response from GitHub API
+  echo "$response"
+
+  # Extract the release ID from the response
+  release_id=$(echo "$response" | jq -r '.id')
+  echo "Release ID: $release_id"
+
+  # 提取源代码（tar.gz）文件的下载链接
+  download_url="https://github.com/jim928/mace/archive/refs/tags/$new_version.tar.gz"
+
+  # 打印下载链接
+  echo "源代码下载链接: $download_url"
+
+  ######## 开始brew 发布 流程 ########
+  # Formula name
+  formula_name="mace"
+
+  # Source URL
+  source_url="$download_url"
+
+  ######## 生成 mace.rb 文件 ########
+
+  # Homebrew Core Formula directory
+  formula_directory="$HOME/.mace/homebrew-mace"
+
+  # if formula_directory not exist, clone it else update it
+  if [ ! -d "$formula_directory" ]; then
+    mkdir -p "$formula_directory"
+    git clone "${homebrew_mace_url}" "$formula_directory"
+  else
+    cd "$formula_directory" || {
+      echo "cd to path failed: $formula_directory"
+      exit 1
+    }
+    git fetch && git pull
+  fi
+
+  cd "$formula_directory" || {
+    echo "cd to path failed: $formula_directory"
+    exit 1
+  }
+
+  mace_formula_path="$formula_directory/$formula_name.rb"
+
+  # Create mace.rb with SHA256 checksum
+  echo "class Mace < Formula" >"$mace_formula_path"
+  echo "  desc \"Your description here\"" >>"$mace_formula_path"
+  echo "  homepage \"https://github.com/jim928/mace\"" >>"$mace_formula_path"
+  echo "  url \"$source_url\"" >>"$mace_formula_path"
+  echo "  sha256 \"$(curl -Ls "$source_url" | shasum -a 256 | cut -d ' ' -f 1)\"" >>"$mace_formula_path"
+  echo "" >>"$mace_formula_path"
+  echo "  # ... 其他 Formula 配置信息 ..." >>"$mace_formula_path"
+  echo "" >>"$mace_formula_path"
+  echo "  def install" >>"$mace_formula_path"
+  echo "    bin.install 'mace'" >>"$mace_formula_path"
+  echo "  end" >>"$mace_formula_path"
+  echo "end" >>"$mace_formula_path"
+
+  # Print the path to the created mace.rb file
+  echo "Formula file created at: $mace_formula_path"
+
+  git add .
+  git commit -m "publish mace.rb $new_version commit from mace}." -a
+  git push "${homebrew_mace_url}" HEAD:master
+}
 
 while (($# > 0)); do # while arguments count>0
   case "$1" in
@@ -429,8 +606,19 @@ while (($# > 0)); do # while arguments count>0
     openJetBrainFolder
     exit
     ;;
+  "makemace")
+    makeMaceWorkFolder
+    exit
+    ;;
+  "publish")
+    publishNewVersion
+    exit
+    ;;
+  "makeasopen")
+    makeASOpen
+    exit
+    ;;
   "test")
-    echo "test function"
     testFunc
     exit
     ;;
