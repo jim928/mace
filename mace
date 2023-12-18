@@ -5,8 +5,8 @@ version="0.1.46"
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
 maceWorkDir="$HOME/.mace"
-maceGitUrl="https://jim928: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@github.com/jim928/mace.git"
-homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
+maceGitUrl="https://jim928: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@github.com/jim928/mace.git"
+homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
 
 usage() {
   cat <<EOF
@@ -449,7 +449,7 @@ publishNewVersion() {
   TAG="$new_version"
 
   # GitHub Personal Access Token for authentication
-  TOKEN="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"
+  TOKEN="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"
 
   # Release notes for the new release
   RELEASE_NOTES="Release notes for version $TAG"
