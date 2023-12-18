@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-version="0.1.45"
+version="0.1.15"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
 maceWorkDir="$HOME/.mace"
 maceGitUrl="https://jim928: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@github.com/jim928/mace.git"
-homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
+homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
 
 usage() {
   cat <<EOF
