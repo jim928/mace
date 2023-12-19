@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.51"
+version="0.1.52"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -398,7 +398,11 @@ makeMaceWorkFolder() {
 publishNewVersion() {
   cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
 
-  git fetch --all --tags
+  # 删除所有本地标签
+  # git tag -l | xargs git tag -d
+
+  # 拉取最新标签
+  git fetch --tags
   git pull
 
   # 修改版本号
@@ -527,6 +531,14 @@ publishNewVersion() {
   git push "${homebrew_mace_url}" HEAD:master
 }
 
+################ upgrade mace version from brew ###############
+upgradeFunc() {
+  brew uninstall mace
+  brew untap jim928/mace
+  brew tap jim928/mace
+  brew install mace
+}
+
 while (($# > 0)); do # while arguments count>0
   case "$1" in
   #    -l | --lang)
@@ -616,6 +628,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "makeasopen")
     makeASOpen
+    exit
+    ;;
+  "upgrade")
+    upgradeFunc
     exit
     ;;
   "test")
