@@ -423,12 +423,6 @@ publishNewVersion() {
   git commit -m "publishMac commit from mace}." -a
   #  git push "${maceGitUrl}" HEAD:master
 
-  # 将数组重新组装为新版本号
-  new_version=$(
-    IFS='.'
-    echo "${version_array[*]}"
-  )
-
   # 创建新 tag
   git tag -a "$new_version" -m "$new_version"
 
