@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.52"
+version="0.1.53"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -399,7 +399,7 @@ publishNewVersion() {
   cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
 
   # 删除所有本地标签
-  # git tag -l | xargs git tag -d
+   git tag -l | xargs git tag -d
 
   # 拉取最新标签
   git fetch --tags
