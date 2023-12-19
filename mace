@@ -399,32 +399,23 @@ publishNewVersion() {
   cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
 
   # 删除所有本地标签
-   git tag -l | xargs git tag -d
+  git tag -l | xargs git tag -d >/dev/null 2>&1
 
   # 拉取最新标签
-  git fetch --tags
+  git fetch --tags >/dev/null 2>&1
   git pull
 
   # 修改版本号
   # 获取当前文件夹下 mace 文件的版本号
-  current_version=$(grep 'version=' mace | awk -F\" '{print $2}')
+  current_version=$(grep 'version=' mace | sed -n 's/version="\([^"]*\)"/\1/p')
 
-  # 将版本号拆分为数组
-  IFS='.' read -ra version_array <<<"$current_version"
-
-  # 递增最后一个元素
-  ((version_array[${#version_array[@]} - 1]++))
-
-  # 将数组重新组装为新版本号
-  new_version=$(
-    IFS='.'
-    echo "${version_array[*]}"
-  )
+  # 递增版本号
+  new_version=$(awk -F. -v OFS=. '{print $1,$2,$3+1}' <<<"$current_version")
 
   # 使用 sed 命令替换文件中的 version 变量
-  sed -i.bak "s/version=\"$current_version\"/version=\"$new_version\"/" mace
+  sed -i '' "s/version=\"$current_version\"/version=\"$new_version\"/" mace
 
-  # 输出新版本号
+  # 输出新版本号``
   echo "Old Version: $current_version"
   echo "New Version: $new_version"
 
