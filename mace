@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-version="0.1.66"
+version="0.1.67"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
 maceWorkDir="$HOME/.mace"
-maceGitUrl="https://jim928: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@github.com/jim928/mace.git"
-homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
+maceGitUrl="https://jim928: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@github.com/jim928/mace.git"
+homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
 
 usage() {
   cat <<EOF
@@ -427,8 +427,10 @@ publishNewVersion() {
   git tag -a "$new_version" -m "$new_version"
 
   # 推送所有分支和标签
-  git push origin --all
-  git push origin --tags
+  git push "${maceGitUrl}" HEAD:master
+  echo "push mace changes to $maceGitUrl done"
+  git push --tags "${maceGitUrl}"
+  echo "push mace tags to $maceGitUrl done"
 
   ########## release new version to github ########
   # Replace with your GitHub username and repository name
@@ -439,7 +441,7 @@ publishNewVersion() {
   TAG="$new_version"
 
   # GitHub Personal Access Token for authentication
-  TOKEN="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"
+  TOKEN="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"
 
   # Release notes for the new release
   RELEASE_NOTES="Release notes for version $TAG"
