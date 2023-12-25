@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-version="0.1.70"
+version="0.1.64"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
 maceWorkDir="$HOME/.mace"
-maceGitUrl="https://jim928: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@github.com/jim928/mace.git"
-homebrew_mace_url="https://jim928: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@github.com/jim928/homebrew-mace.git"
+maceGitUrl="git@github.com:jim928/mace.git"
+homebrew_mace_url="git@github.com:jim928/homebrew-mace.git"
 
 usage() {
   cat <<EOF
@@ -440,16 +440,18 @@ publishNewVersion() {
   # Replace with the tag name you want to create a release from
   TAG="$new_version"
 
-  # GitHub Personal Access Token for authentication
-  TOKEN="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"
-
-  # Release notes for the new release
   RELEASE_NOTES="Release notes for version $TAG"
+  #
+  #  # Create a release using the GitHub API
+  #  response=$(curl -s -X POST \
+  #    -H "Authorization: token $TOKEN" \
+  #    -H "Accept: application/vnd.github.v3+json" \
+  #    "https://api.github.com/repos/$USERNAME/$REPO/releases" \
+  #    -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
 
-  # Create a release using the GitHub API
   response=$(curl -s -X POST \
-    -H "Authorization: token $TOKEN" \
     -H "Accept: application/vnd.github.v3+json" \
+    -H "Content-Type: application/json" \
     "https://api.github.com/repos/$USERNAME/$REPO/releases" \
     -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
 
