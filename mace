@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.72"
+version="0.1.73"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -388,7 +388,8 @@ createZSHRC() {
 }
 
 ####################### mace work foler ####################
-makeMaceWorkFolder() {
+makeMaceDevFolder() {
+  echo "makeMaceDevFolder"
   createMaceFolder
   cd "$maceWorkDir" || echo "cd to path failed :$maceWorkDir"
   git clone "${maceGitUrl}"
@@ -606,8 +607,8 @@ while (($# > 0)); do # while arguments count>0
     openJetBrainFolder
     exit
     ;;
-  "makemace")
-    makeMaceWorkFolder
+  "macedev")
+    makeMaceDevFolder
     exit
     ;;
   "publish")
