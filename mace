@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.71"
+version="0.1.72"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -419,8 +419,10 @@ publishNewVersion() {
   echo "Old Version: $current_version"
   echo "New Version: $new_version"
 
+  # 获取当前日期
+  current_date=$(date +"%Y-%m-%d")
   git add .
-  git commit -m "publishMac commit from mace}." -a
+  git commit -m "publishMac commit from mace - ${current_date}." -a
   #  git push "${maceGitUrl}" HEAD:master
 
   # 创建新 tag
@@ -441,14 +443,8 @@ publishNewVersion() {
   TAG="$new_version"
 
   RELEASE_NOTES="Release notes for version $TAG"
-  #
-  #  # Create a release using the GitHub API
-  #  response=$(curl -s -X POST \
-  #    -H "Authorization: token $TOKEN" \
-  #    -H "Accept: application/vnd.github.v3+json" \
-  #    "https://api.github.com/repos/$USERNAME/$REPO/releases" \
-  #    -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
 
+  echo "Creating GitHub release..."
   response=$(curl -s -X POST \
     -H "Accept: application/vnd.github.v3+json" \
     -H "Content-Type: application/json" \
@@ -482,9 +478,11 @@ publishNewVersion() {
 
   # if formula_directory not exist, clone it else update it
   if [ ! -d "$formula_directory" ]; then
+    echo "homebrew-mace directory does not exist. Cloning..."
     mkdir -p "$formula_directory"
     git clone "${homebrew_mace_url}" "$formula_directory"
   else
+    echo "homebrew-mace directory exists. Updating..."
     cd "$formula_directory" || {
       echo "cd to path failed: $formula_directory"
       exit 1
