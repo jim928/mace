@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.73"
+version="0.1.74"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -378,7 +378,8 @@ createZSHRC() {
 
     # 在 .zshrc 文件中添加一些示例内容
     echo '#this is a new .zshrc' >>"$zshrc_path"
-    echo 'export PATH=/Applications/Android\ Studio.app/Contents/MacOS/' >>"$zshrc_path"
+#    echo 'export PATH=/Applications/Android\ Studio.app/Contents/MacOS/' >>"$zshrc_path"
+    echo 'export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Android Studio.app/Contents/MacOS/:$PATH"' >>"$zshrc_path"
 
     echo "Done! You can customize the .zshrc file as needed."
     source "$zshrc_path"
