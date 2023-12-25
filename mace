@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.76"
+version="0.1.77"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -385,8 +385,8 @@ createZSHRC() {
     source "$zshrc_path"
   else
     # 如果已经存在 .zshrc 文件，则将/Applications/Android Studio.app/Contents/MacOS 路径加入环境变量
-    export PATH="/Applications/Android Studio.app/Contents/MacOS:$PATH"
-    source "$HOME/.zshrc"
+    echo 'export PATH="/Applications/Android Studio.app/Contents/MacOS:$PATH"' >>"$zshrc_path"
+    source "$zshrc_path"
     echo ".zshrc file already exists. add Applications/Android Studio.app/Contents/MacOS to path in .zshrc"
   fi
 }
