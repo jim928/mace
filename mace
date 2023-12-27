@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.78"
+version="0.1.79"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -532,6 +532,12 @@ upgradeFunc() {
   brew install mace
 }
 
+################ delete all .lock files ################
+deleteAllLockFiles() {
+  echo "find . -name '*.lock' -type f -print -exec rm -rf {} \;"
+  find . -name '*.lock' -type f -print -exec rm -rf {} \;
+}
+
 while (($# > 0)); do # while arguments count>0
   case "$1" in
   #    -l | --lang)
@@ -625,6 +631,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "upgrade")
     upgradeFunc
+    exit
+    ;;
+  "deletelock")
+    deleteAllLockFiles
     exit
     ;;
   "test")
