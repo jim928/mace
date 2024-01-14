@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.79"
+version="0.1.80"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -35,28 +35,24 @@ how to publish new version of mace;
 
 Examples:
 =========
-    # config for all (AndroidStudio,Xcode)
-    $script_name config
-    # config for AndroidStudio
-    $script_name configas
-    # config for Xcode
-    $script_name configxc
-    # Show help
-    $script_name -h
-    # Show version
-    $script_name -v
-    # push local change to github for AndroidStudio templates
-    $script_name pushas
-    # push local change to github for XCode CodeSnippets
-    $script_name pushxc
-    # push local change to github for IdeaIC templates
-    $script_name pushidea
-    # push local change to github for templates and CodeSnippets
-    $script_name push
-    # find and delete the mace.rb file in update steps
-    $script_name deleterb
-    # generate id_ed25519 sshkey if not exist,and copy to clipboard
-    $script_name sshkey
+      "configas"
+      "configidea"
+      "config"
+      "pushas"
+      "pushxc"
+      "pushidea"
+      "push"
+      "deleterb"
+      "sshkey"
+      "github"
+      "opengoogle"
+      "openuserdata"
+      "openjetbrain"
+      "macedev"
+      "publish"
+      "makeasopen"
+      "upgrade"
+      "deletelock"
 EOF
 }
 
