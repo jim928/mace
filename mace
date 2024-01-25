@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.82"
+version="0.1.83"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -345,6 +345,15 @@ pushFuc() {
     return
   fi
 
+  echo "**********************************"
+  echo "--taskName : $taskName"
+  echo "--appPath : $appPath"
+  echo "--gitUrl : $gitUrl"
+  echo "--gitProjectName : $gitProjectName"
+  echo "--shouldLoop : $shouldLoop"
+  echo "--appName : $appName"
+  echo "--finalFolder : $finalFolder"
+  
   cd "$appPath" || echo "cd to path failed :$appPath"
   echo "current path : $appPath"
 
