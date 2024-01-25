@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.81"
+version="0.1.82"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -123,7 +123,7 @@ configFunc() {
     appName="IntelliJIdea"
     finalFolder="templates"
   elif [ "$1" = 7 ]; then
-    taskName="IntellijIdeaCKeyMaps"
+    taskName="GoLandKeyMaps"
     appPath=~/Library/Application\ Support/JetBrains
     gitUrl="https://github.com/jim928/keymapsas.git"
     gitProjectName="keymapsas"
@@ -131,12 +131,28 @@ configFunc() {
     appName="GoLand"
     finalFolder="keymaps"
   elif [ "$1" = 8 ]; then
-    taskName="IntellijIdeaCTemplates"
+    taskName="GoLandTemplates"
     appPath=~/Library/Application\ Support/JetBrains
     gitUrl="https://github.com/jim928/templatesas.git"
     gitProjectName="templatesas"
     shouldLoop="1"
     appName="GoLand"
+    finalFolder="templates"
+  elif [ "$1" = 9 ]; then
+    taskName="PyCharmKeyMaps"
+    appPath=~/Library/Application\ Support/JetBrains
+    gitUrl="https://github.com/jim928/keymapsas.git"
+    gitProjectName="keymapsas"
+    shouldLoop="1"
+    appName="PyCharm"
+    finalFolder="keymaps"
+  elif [ "$1" = 10 ]; then
+    taskName="PyCharmTemplates"
+    appPath=~/Library/Application\ Support/JetBrains
+    gitUrl="https://github.com/jim928/templatesas.git"
+    gitProjectName="templatesas"
+    shouldLoop="1"
+    appName="PyCharm"
     finalFolder="templates"
   fi
 
@@ -212,6 +228,8 @@ configIdea() {
   configFunc 6
   configFunc 7
   configFunc 8
+  configFunc 9
+  configFunc 10
 }
 
 deleterb() {
@@ -289,7 +307,7 @@ pushFuc() {
     appName="IntelliJIdea"
     finalFolder="templates"
   elif [ "$1" = 7 ]; then
-    taskName="IntellijIdeaCTemplates"
+    taskName="GoLandTemplates"
     appPath=~/Library/Application\ Support/JetBrains
     gitUrl="https://github.com/jim928/keymapsas.git"
     gitProjectName="keymapsas"
@@ -297,12 +315,28 @@ pushFuc() {
     appName="GoLand"
     finalFolder="keymaps"
   elif [ "$1" = 8 ]; then
-    taskName="IntellijIdeaCTemplates"
+    taskName="GoLandTemplates"
     appPath=~/Library/Application\ Support/JetBrains
     gitUrl="https://github.com/jim928/templatesas.git"
     gitProjectName="templatesas"
     shouldLoop="1"
     appName="GoLand"
+    finalFolder="templates"
+  elif [ "$1" = 9 ]; then
+    taskName="PyCharmTemplates"
+    appPath=~/Library/Application\ Support/JetBrains
+    gitUrl="https://github.com/jim928/keymapsas.git"
+    gitProjectName="keymapsas"
+    shouldLoop="1"
+    appName="PyCharm"
+    finalFolder="keymaps"
+  elif [ "$1" = 10 ]; then
+    taskName="PyCharmTemplates"
+    appPath=~/Library/Application\ Support/JetBrains
+    gitUrl="https://github.com/jim928/templatesas.git"
+    gitProjectName="templatesas"
+    shouldLoop="1"
+    appName="PyCharm"
     finalFolder="templates"
   fi
 
@@ -319,8 +353,7 @@ pushFuc() {
     #~/Library/Application\ Support/Google/AndroidStudio2021.1/keymaps/macOS\ copy.xml
     #因此先找到已安装的所有AS不同版本文件夹
 
-    for i in $(find "$appPath" -type d -name "$appName*"); do
-      #    for i in "$appPath"/"$appName"*; do
+    for i in "$appPath"/"$appName"*; do
       echo "$i"
       cd "$i" || echo "cd to path failed :$i"
 
@@ -373,6 +406,10 @@ pushXCode() {
 pushIdeaC() {
   pushFuc 5
   pushFuc 6
+  pushFuc 7
+  pushFuc 8
+  pushFuc 9
+  pushFuc 10
 }
 #################### test func ####################
 testFunc() {
