@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.93"
+version="0.1.94"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -753,7 +753,21 @@ makegithubkey() {
   echo "If you want Git to use this specific SSH key for GitHub operations, execute the following command in your repository:"
   echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
 }
-
+mergeHelp() {
+  echo "merge 冲突 操作帮助"
+  echo "取消本次合并 git merge --abort"
+  echo "处理冲突后发现某个文件需要重新处理一次冲突 git checkout --conflict=merge -- example.dart"
+}
+gitCloneOther() {
+  echo "将仓库A的分支branch1代码合并到仓库B的分支branch2"
+  echo "git clone git@github.com:user/repoB.git"
+  echo "cd repoB"
+  echo "git remote add repoA git@github.com:user/repoA.git"
+  echo "git fetch repoA"
+  echo "git checkout branch2"
+  echo "git merge repoA/branch1"
+  echo "然后处理合并产生的冲突"
+}
 while (($# > 0)); do # while arguments count>0
   case "$1" in
   #    -l | --lang)
@@ -859,6 +873,14 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "makegithubkey")
     makegithubkey
+    exit
+    ;;
+  "mergehelp")
+    mergeHelp
+    exit
+    ;;
+  "gitcloneother")
+    gitCloneOther
     exit
     ;;
   "test")
