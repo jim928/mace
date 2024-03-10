@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.99"
+version="0.1.100"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -768,6 +768,11 @@ gitCloneOther() {
   echo "git merge repoA/branch1"
   echo "然后处理合并产生的冲突"
 }
+listAllPub() {
+  echo "列出所有.pub公钥文件，这些文件会添加到github或gitlab网站上"
+  echo "for file in ~/.ssh/*.pub; do echo "$file"; cat "$file"; echo; done"
+  for file in ~/.ssh/*.pub; do echo "$file"; cat "$file"; echo; done
+}
 while (($# > 0)); do # while arguments count>0
   case "$1" in
   #    -l | --lang)
@@ -881,6 +886,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "gitcloneother")
     gitCloneOther
+    exit
+    ;;
+  "listallpub")
+    listAllPub
     exit
     ;;
   "test")
