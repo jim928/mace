@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.87"
+version="0.1.88"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -720,6 +720,40 @@ showColors() {
 0% — 00"
 }
 
+makegithubkey() {
+  read -p "Enter the key name suffix (the full key name will be id_ed25519_github_[your_input]): " key_suffix
+  key_name="id_ed25519_github_$key_suffix"
+  key_path="$HOME/.ssh/$key_name"
+
+  # Generate the SSH key
+  read -p "Enter your email associated with your GitHub account: " email
+  ssh-keygen -t ed25519 -C "$email" -f "$key_path"
+
+  # Start the ssh-agent in the background
+  eval "$(ssh-agent -s)"
+
+  # On macOS, use -K to store the passphrase in your keychain
+  ssh-add -K "$key_path"
+
+  # Copy the SSH public key to your clipboard
+  pbcopy <"${key_path}.pub"
+  echo "The SSH public key has been copied to your clipboard. Please add it to your GitHub account."
+
+  # Instructions to add the key to GitHub
+  echo "1. Go to GitHub and log in."
+  echo "2. Click on your profile photo, then click Settings."
+  echo "3. In the user settings sidebar, click SSH and GPG keys."
+  echo "4. Click New SSH key or Add SSH key."
+  echo "5. In the Title field, add a descriptive label for the new key."
+  echo "6. Paste your key into the Key field (it's already on your clipboard)."
+  echo "7. Click Add SSH key."
+  echo "8. If prompted, confirm your GitHub password."
+
+  # Reminder to configure Git to use the specific SSH key for GitHub operations if necessary
+  echo "If you want Git to use this specific SSH key for GitHub operations, execute the following command in your repository:"
+  echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
+}
+
 while (($# > 0)); do # while arguments count>0
   case "$1" in
   #    -l | --lang)
@@ -821,6 +855,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "color")
     showColors
+    exit
+    ;;
+  "makegithubkey")
+    makegithubkey
     exit
     ;;
   "test")
