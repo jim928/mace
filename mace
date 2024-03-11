@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.100"
+version="0.1.101"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -423,7 +423,6 @@ pushIdeaC() {
 #################### test func ####################
 testFunc() {
   echo "testFunc"
-  makeASOpen
 }
 ####################### make open in android studio work flow  ####################
 makeASOpen() {
@@ -771,7 +770,46 @@ gitCloneOther() {
 listAllPub() {
   echo "列出所有.pub公钥文件，这些文件会添加到github或gitlab网站上"
   echo "for file in ~/.ssh/*.pub; do echo "$file"; cat "$file"; echo; done"
-  for file in ~/.ssh/*.pub; do echo "$file"; cat "$file"; echo; done
+  for file in ~/.ssh/*.pub; do
+    echo "$file"
+    cat "$file"
+    echo
+  done
+}
+sshAddAll() {
+  #!/bin/bash
+
+  # 查找 ~/.ssh 目录下的所有私钥文件
+  private_keys=($(find ~/.ssh -type f -name '*.pub' -exec basename {} .pub \;))
+
+  # 初始化一个数组来存储唯一的私钥文件路径
+  unique_keys=()
+
+  # 遍历私钥文件列表，确保每个私钥文件对应的公钥文件也存在，然后添加到数组中
+  for key in "${private_keys[@]}"; do
+    if [[ -f ~/.ssh/"$key" && -f ~/.ssh/"$key".pub ]]; then
+      # 检查私钥文件是否已经存在于数组中
+      exists=false
+      for unique_key in "${unique_keys[@]}"; do
+        if [[ "$key" == "$unique_key" ]]; then
+          exists=true
+          break
+        fi
+      done
+
+      # 如果私钥文件不在数组中，则添加到数组并添加到 SSH agent
+      if ! "$exists"; then
+        unique_keys+=("$key")
+        echo "Identity added: ~/.ssh/$key"
+        # 添加私钥文件到 SSH agent
+        ssh-add ~/.ssh/"$key"
+      fi
+    fi
+  done
+
+  # 打印 SSH agent 中的私钥文件
+  echo "SSH agent 中的私钥文件："
+  ssh-add -l
 }
 while (($# > 0)); do # while arguments count>0
   case "$1" in
@@ -890,6 +928,10 @@ while (($# > 0)); do # while arguments count>0
     ;;
   "listallpub")
     listAllPub
+    exit
+    ;;
+  "sshaddall")
+    sshAddAll
     exit
     ;;
   "test")
