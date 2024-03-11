@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.101"
+version="0.1.102"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -719,9 +719,9 @@ showColors() {
 0% — 00"
 }
 
-makegithubkey() {
-  read -p "Enter the key name suffix (the full key name will be id_ed25519_github_[your_input]): " key_suffix
-  key_name="id_ed25519_github_$key_suffix"
+makesshkey() {
+  read -p "Enter the key name suffix (the full key name will be id_ed25519_[your_input]): " key_suffix
+  key_name="id_ed25519_$key_suffix"
   key_path="$HOME/.ssh/$key_name"
 
   # Generate the SSH key
@@ -914,8 +914,8 @@ while (($# > 0)); do # while arguments count>0
     showColors
     exit
     ;;
-  "makegithubkey")
-    makegithubkey
+  "makesshkey")
+    makesshkey
     exit
     ;;
   "mergehelp")
