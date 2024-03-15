@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.104"
+version="0.1.105"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -234,15 +234,26 @@ openJetBrainFolder() {
 }
 
 getSSHKey() {
-  FILE=~/.ssh/id_ed25519.pub
-  if test -f "$FILE"; then
-    echo "$FILE exist"
+  # 查找 ~/.ssh/ 目录下所有的 .pub 文件
+  pub_files=$(find ~/.ssh -name "*.pub")
+  pub_files_array=($pub_files)
+
+  if [ ${#pub_files_array[@]} -gt 0 ]; then
+    echo "找到以下SSH公钥文件："
+    select pub_file in "${pub_files_array[@]}"; do
+      if [ -n "$pub_file" ]; then
+        # 将选定的公钥文件内容复制到剪贴板
+        cat "$pub_file" | pbcopy
+        echo "$pub_file 现在已经复制到剪贴板"
+        break
+      else
+        echo "无效选择。"
+      fi
+    done
   else
-    echo "generate now"
-    ssh-keygen -t ed25519 -C "<$(date +%Y%m%d)$USER>"
+    echo "未找到SSH公钥文件，现在生成一个。"
+    makessh
   fi
-  echo "now its in clipboard"
-  tr -d '\n' <~/.ssh/id_ed25519.pub | pbcopy
 }
 
 pushFuc() {
@@ -607,7 +618,7 @@ showColors() {
   echo "$colorList" | tr ',' '\n'
 }
 
-makesshkey() {
+makessh() {
   read -p "Enter the key name suffix (the full key name will be id_ed25519_[your_input]): " key_suffix
   key_name="id_ed25519_$key_suffix"
   key_path="$HOME/.ssh/$key_name"
@@ -640,7 +651,16 @@ makesshkey() {
   echo "If you want Git to use this specific SSH key for GitHub operations, execute the following command in your repository:"
   echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
 }
-mergeHelp() {
+gitHelp() {
+  echo "----------------------------"
+  echo "指定仓库使用某一个sshkey文件"
+  echo "git config --global core.sshCommand \"ssh -i /Users/griffin/.ssh/id_ed25519_gitlab -F /dev/null\""
+  echo "检查是否设置成功"
+  echo "git config --get core.sshCommand"
+  echo "----------------------------"
+  echo "clone的时候指定使用某个sshkey"
+  echo "GIT_SSH_COMMAND='ssh -i /Users/griffin/.ssh/id_ed25519_gitlab' git clone git@gitlab.com:abc/def.git"
+  echo "----------------------------"
   echo "merge 冲突 操作帮助"
   echo "取消本次合并 git merge --abort"
   echo "处理冲突后发现某个文件需要重新处理一次冲突 git checkout --conflict=merge -- example.dart"
@@ -704,6 +724,29 @@ battlenet() {
   echo "2,Download the battle.net agent in /en-US/ region, I’m not allowed to post links here."
   echo "3,Open Terminal on Mac and copy this code: open -a ~/Downloads/Battle.net-Setup.app --args --locale=enUS --region=US --session=, then tap Enter."
 }
+setssh() {
+  # 检查当前目录是否是Git仓库
+  if git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "当前目录是一个Git仓库。"
+
+    # 列出~/.ssh目录下所有的私钥文件
+    echo "可用的SSH密钥文件："
+    key_files=$(find ~/.ssh -type f ! -name "*.pub" ! -name "config" ! -name "known_hosts")
+    select key_path in $key_files; do
+      if [ -n "$key_path" ]; then
+        # 设置选定的SSH密钥
+        git config core.sshCommand "ssh -i $key_path -F /dev/null"
+        echo "已设置SSH密钥：$key_path"
+        break
+      else
+        echo "无效的选择。"
+      fi
+    done
+  else
+    echo "当前目录不是一个Git仓库。"
+  fi
+}
+
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -724,7 +767,6 @@ functions=(
   #  "pushidea:pushIdeaC"
   "push:pushAll"
   "deleterb:deleterb"
-  "sshkey:getSSHKey"
   "github:githubHelp"
   "opengoogle:openGoogleFolder"
   "openuserdata:openUserDataFolder"
@@ -735,13 +777,15 @@ functions=(
   "upgrade:upgradeFunc"
   "deletelock:deleteAllLockFiles"
   "color:showColors"
-  "makesshkey:makesshkey"
-  "mergehelp:mergeHelp"
+  "githelp:gitHelp"
   "gitcloneother:gitCloneOther"
   "listallpub:listAllPub"
   "sshaddall:sshAddAll"
   "battlenet:battlenet"
   "howto:howToCreateMace"
+  "sshkey:getSSHKey"
+  "makessh:makessh"
+  "setssh:setssh"
   "test:testFunc"
 )
 
