@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.105"
+version="0.1.106"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -13,7 +13,7 @@ usage() {
   for func in "${functions[@]}"; do
     name="${func%%:*}"
     method="${func##*:}"
-    echo "\"$name\" ---------- \"$method\""
+    echo "$name ---------- $method"
   done
 }
 howToCreateMace() {
@@ -736,6 +736,7 @@ setssh() {
       if [ -n "$key_path" ]; then
         # 设置选定的SSH密钥
         git config core.sshCommand "ssh -i $key_path -F /dev/null"
+        echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
         echo "已设置SSH密钥：$key_path"
         break
       else
