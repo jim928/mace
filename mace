@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.103"
+version="0.1.104"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -9,40 +9,38 @@ maceGitUrl="git@github.com:jim928/mace.git"
 homebrew_mace_url="git@github.com:jim928/homebrew-mace.git"
 
 usage() {
-  cat <<EOF
-Script name: $script_name
-Description:
-============
-
-This is a script to config environment of mac dev in dev Apps
-~/Library/Application Support/Google
-~/Library/Developer/Xcode/UserData
-
-jim@jimdeMBP ~ % brew --repo
-/usr/local/Homebrew
-jim@jimdeMBP ~ % brew --repo jim928/mace
-/usr/local/Homebrew/Library/Taps/jim928/homebrew-mace
-
-how to publish new version of mace;
-1,new code in mace git project and commit and push;
-2,make new tag from the last commit and push;
-3,make new release from the tag just made;
-4,right click and copy the link from the release : Source code (tar.gz);
-5,open terminal , and use command : brew create linkJustCopied;
-6,input the formulaName : mace and copy the sha256 value;
-7,update the link and the sha256 to the git project : homebrew-mace and push;
-8,delete the mace.rb file created in step 7;  (use deleterb command)
-
-EOF
-
   # 打印可用的方法列表
-  echo "Examples:"
-  echo "========="
   for func in "${functions[@]}"; do
     name="${func%%:*}"
     method="${func##*:}"
-    echo "\"$name\" =====> \"$method\""
+    echo "\"$name\" ---------- \"$method\""
   done
+}
+howToCreateMace() {
+  cat <<EOF
+  Script name: $script_name
+  Description:
+  ============
+
+  This is a script to config environment of mac dev in dev Apps
+  ~/Library/Application Support/Google
+  ~/Library/Developer/Xcode/UserData
+
+  jim@jimdeMBP ~ % brew --repo
+  /usr/local/Homebrew
+  jim@jimdeMBP ~ % brew --repo jim928/mace
+  /usr/local/Homebrew/Library/Taps/jim928/homebrew-mace
+
+  how to publish new version of mace;
+  1,new code in mace git project and commit and push;
+  2,make new tag from the last commit and push;
+  3,make new release from the tag just made;
+  4,right click and copy the link from the release : Source code (tar.gz);
+  5,open terminal , and use command : brew create linkJustCopied;
+  6,input the formulaName : mace and copy the sha256 value;
+  7,update the link and the sha256 to the git project : homebrew-mace and push;
+  8,delete the mace.rb file created in step 7;  (use deleterb command)
+EOF
 }
 
 githubHelp() {
@@ -717,13 +715,13 @@ options=(
 )
 # 定义功能和对应的函数
 functions=(
-#  "configas:configAndroidStudio"
-#  "configxc:configXCode"
-#  "configidea:configIdea"
+  #  "configas:configAndroidStudio"
+  #  "configxc:configXCode"
+  #  "configidea:configIdea"
   "config:configAll"
-#  "pushas:pushAndroidStudio"
-#  "pushxc:pushXCode"
-#  "pushidea:pushIdeaC"
+  #  "pushas:pushAndroidStudio"
+  #  "pushxc:pushXCode"
+  #  "pushidea:pushIdeaC"
   "push:pushAll"
   "deleterb:deleterb"
   "sshkey:getSSHKey"
@@ -743,6 +741,7 @@ functions=(
   "listallpub:listAllPub"
   "sshaddall:sshAddAll"
   "battlenet:battlenet"
+  "howto:howToCreateMace"
   "test:testFunc"
 )
 
