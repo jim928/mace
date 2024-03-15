@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.106"
+version="0.1.107"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -647,10 +647,23 @@ makessh() {
   echo "7. Click Add SSH key."
   echo "8. If prompted, confirm your GitHub password."
 
-  # Reminder to configure Git to use the specific SSH key for GitHub operations if necessary
-  echo "If you want Git to use this specific SSH key for GitHub operations, execute the following command in your repository:"
-  echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
+  # Check if the current directory is a Git repository
+  if [ -d ".git" ]; then
+    read -p "Do you want to configure Git to use this SSH key for GitHub operations in this repository? (y/n): " response
+    case "$response" in
+    [yY][eE][sS] | [yY])
+      # Set the specific SSH key for GitHub operations in this repository
+      git config core.sshCommand "ssh -i $key_path -F /dev/null"
+      echo "Git is now configured to use this SSH key for GitHub operations in this repository."
+      ;;
+    *)
+      echo "You can manually configure Git to use this SSH key for GitHub operations in this repository by executing the following command:"
+      echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
+      ;;
+    esac
+  fi
 }
+
 gitHelp() {
   echo "----------------------------"
   echo "指定仓库使用某一个sshkey文件"
