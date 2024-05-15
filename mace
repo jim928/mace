@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.107"
+version="0.1.108"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -218,6 +218,11 @@ configIdea() {
   configFunc 9
   configFunc 10
 }
+configAll() {
+  configAndroidStudio
+  configXCode
+  configIdea
+}
 
 deleterb() {
   find $(brew --repo)/Library/Taps/homebrew/homebrew-core -name 'mace.rb' -type f -print -exec rm -rf {} \;
@@ -417,6 +422,11 @@ pushIdeaC() {
   pushFuc 8
   pushFuc 9
   pushFuc 10
+}
+pushAll() {
+  pushAndroidStudio
+  pushXCode
+  pushIdeaC
 }
 #################### test func ####################
 testFunc() {
