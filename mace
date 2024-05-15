@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.108"
+version="0.1.109"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -770,7 +770,14 @@ setssh() {
     echo "当前目录不是一个Git仓库。"
   fi
 }
-
+gitGlobal() {
+  echo "# 查看所有全局配置"
+  echo "git config --global --list"
+  echo "# 设置全局用户名"
+  echo "git config --global user.name \"Alice\""
+  echo "# 设置全局邮箱"
+  echo "git config --global user.email \"alice@example.com\""
+}
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -810,6 +817,7 @@ functions=(
   "sshkey:getSSHKey"
   "makessh:makessh"
   "setssh:setssh"
+  "gitglobal:gitGlobal"
   "test:testFunc"
 )
 
