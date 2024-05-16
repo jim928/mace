@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.109"
+version="0.1.110"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -778,6 +778,11 @@ gitGlobal() {
   echo "# 设置全局邮箱"
   echo "git config --global user.email \"alice@example.com\""
 }
+#用Android studio 打开当前文件夹
+openWithAndroidStudio() {
+  #  open -a "Android Studio"
+  'studio .'
+}
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -805,6 +810,7 @@ functions=(
   "macedev:makeMaceDevFolder"
   "publish:publishNewVersion"
   "makeasopen:makeASOpen"
+  "asopen:openWithAndroidStudio"
   "upgrade:upgradeFunc"
   "deletelock:deleteAllLockFiles"
   "color:showColors"
