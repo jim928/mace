@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.112"
+version="0.1.113"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -780,11 +780,7 @@ gitGlobal() {
 }
 #用Android studio 打开当前文件夹
 openWithAndroidStudio() {
-    if [ -z "$1" ]; then
-        open -a "Android Studio" .
-    else
-        open -a "Android Studio" "$1"
-    fi
+  open -a "Android Studio" .
 }
 ##############################  最终调用 ############################
 
