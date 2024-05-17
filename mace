@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.113"
+version="0.1.114"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -778,6 +778,15 @@ gitGlobal() {
   echo "# 设置全局邮箱"
   echo "git config --global user.email \"alice@example.com\""
 }
+flutterCleanGet() {
+  if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    flutter clean
+    deletelock
+    flutter pub get
+  else
+    echo "当前目录不是一个Git仓库，操作未执行。"
+  fi
+}
 #用Android studio 打开当前文件夹
 openWithAndroidStudio() {
   open -a "Android Studio" .
@@ -823,6 +832,7 @@ functions=(
   "makessh:makessh"
   "setssh:setssh"
   "gitglobal:gitGlobal"
+  "fluttercleanget:flutterCleanGet"
   "test:testFunc"
 )
 
