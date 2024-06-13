@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.114"
+version="0.1.115"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -791,6 +791,10 @@ flutterCleanGet() {
 openWithAndroidStudio() {
   open -a "Android Studio" .
 }
+setLunchKey() {
+  echo "当电脑的功能键里没有启动台按钮时，设置启动台的快捷键"
+  echo "系统设置--键盘--键盘快捷键--启动台与程序坞--显示启动台"
+}
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -833,6 +837,7 @@ functions=(
   "setssh:setssh"
   "gitglobal:gitGlobal"
   "fluttercleanget:flutterCleanGet"
+  "setlunchkey:setLunchKey"
   "test:testFunc"
 )
 
