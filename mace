@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.115"
+version="0.1.116"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -778,7 +778,7 @@ gitGlobal() {
   echo "# 设置全局邮箱"
   echo "git config --global user.email \"alice@example.com\""
 }
-flutterCleanGet() {
+pubCleanGet() {
   if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     flutter clean
     deletelock
@@ -836,7 +836,7 @@ functions=(
   "makessh:makessh"
   "setssh:setssh"
   "gitglobal:gitGlobal"
-  "fluttercleanget:flutterCleanGet"
+  "pubcleanget:pubCleanGet"
   "setlunchkey:setLunchKey"
   "test:testFunc"
 )
