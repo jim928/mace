@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.116"
+version="0.1.117"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -795,6 +795,11 @@ setLunchKey() {
   echo "当电脑的功能键里没有启动台按钮时，设置启动台的快捷键"
   echo "系统设置--键盘--键盘快捷键--启动台与程序坞--显示启动台"
 }
+installadb() {
+  echo "安装adb"
+  echo "brew install --cask android-platform-tools"
+  brew install --cask android-platform-tools
+}
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -838,6 +843,7 @@ functions=(
   "gitglobal:gitGlobal"
   "pubcleanget:pubCleanGet"
   "setlunchkey:setLunchKey"
+  "installadb:installadb"
   "test:testFunc"
 )
 
