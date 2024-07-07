@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.118"
+version="0.1.119"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -803,13 +803,14 @@ installadb() {
 find_func() {
   search_term="$2"
 
+  echo "如果要查找所有子目录 find .  -name \"*$search_term*\" "
+  echo "如果仅查找当前目录 find .  -name *$search_term* "
+
   if [ -z "$search_term" ]; then
     echo "Usage: find <search_term>"
     exit 1
   fi
 
-  echo "如果要查找所有子目录 find .  -name \"*$search_term*\" "
-  echo "如果仅查找当前目录 find .  -name *$search_term* "
   # 使用 find 命令来查找当前目录下所有文件名包含指定字符串的文件
   find . -name "*$search_term*"
 }
