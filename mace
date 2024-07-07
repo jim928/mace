@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.117"
+version="0.1.118"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -779,7 +779,7 @@ gitGlobal() {
   echo "git config --global user.email \"alice@example.com\""
 }
 pubCleanGet() {
-  if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     flutter clean
     deletelock
     flutter pub get
@@ -799,6 +799,19 @@ installadb() {
   echo "安装adb"
   echo "brew install --cask android-platform-tools"
   brew install --cask android-platform-tools
+}
+find_func() {
+  search_term="$2"
+
+  if [ -z "$search_term" ]; then
+    echo "Usage: find <search_term>"
+    exit 1
+  fi
+
+  echo "如果要查找所有子目录 find .  -name \"*$search_term*\" "
+  echo "如果仅查找当前目录 find .  -name *$search_term* "
+  # 使用 find 命令来查找当前目录下所有文件名包含指定字符串的文件
+  find . -name "*$search_term*"
 }
 ##############################  最终调用 ############################
 
@@ -844,6 +857,7 @@ functions=(
   "pubcleanget:pubCleanGet"
   "setlunchkey:setLunchKey"
   "installadb:installadb"
+  "find:find_func"
   "test:testFunc"
 )
 
@@ -855,7 +869,7 @@ while (($# > 0)); do
 
     # 如果参数匹配，则执行相应的函数并退出循环
     if [[ "$1" == "$param" ]]; then
-      $func
+      $func "$@"
       exit
     fi
   done
