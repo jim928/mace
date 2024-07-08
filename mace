@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.119"
+version="0.1.120"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -814,6 +814,19 @@ find_func() {
   # 使用 find 命令来查找当前目录下所有文件名包含指定字符串的文件
   find . -name "*$search_term*"
 }
+john() {
+  echo "安装john"
+  #  http://downloads.skullsecurity.org/passwords/rockyou.txt.bz2 下载的john的字典
+  #  sudo gunzip /usr/share/wordlists/rockyou.txt.gz  解压的john的字典
+#  echo "安装john"
+#  brew install john
+}
+reduceImage() {
+  echo "安装imagemagick"
+  echo "brew install imagemagick"
+  echo "magick input.jpg -quality 85 output.jpg"
+  echo "magick input.png -resize 50% output.png"
+}
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -859,6 +872,7 @@ functions=(
   "setlunchkey:setLunchKey"
   "installadb:installadb"
   "find:find_func"
+  "img:reduceImage"
   "test:testFunc"
 )
 
