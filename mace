@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.120"
+version="0.1.121"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -818,14 +818,87 @@ john() {
   echo "安装john"
   #  http://downloads.skullsecurity.org/passwords/rockyou.txt.bz2 下载的john的字典
   #  sudo gunzip /usr/share/wordlists/rockyou.txt.gz  解压的john的字典
-#  echo "安装john"
-#  brew install john
+  #  echo "安装john"
+  #  brew install john
 }
 reduceImage() {
-  echo "安装imagemagick"
+  echo "安装imagemagick说明"
   echo "brew install imagemagick"
   echo "magick input.jpg -quality 85 output.jpg"
   echo "magick input.png -resize 50% output.png"
+
+  file="$2"
+  quality="$3"
+
+  # 检查文件类型
+  if [[ ! "$file" =~ \.(jpg|jpeg|png)$ ]]; then
+    echo "The file must be a jpg, jpeg, or png type."
+    return
+  fi
+
+  # 检查是否已安装 ImageMagick
+  if ! command -v magick &>/dev/null; then
+    echo "ImageMagick is not installed. Installing now..."
+    brew install imagemagick
+  fi
+
+  # 检查是否已安装 pngquant
+  if [[ "$file" =~ \.png$ ]] && ! command -v pngquant &>/dev/null; then
+    echo "pngquant is not installed. Installing now..."
+    brew install pngquant
+  fi
+
+  # 检查质量参数是否有效
+  if [[ "$quality" =~ ^[0-9]+$ ]] && [ "$quality" -gt 0 ] && [ "$quality" -lt 100 ]; then
+    resize_quality="$quality"
+  else
+    resize_quality=50
+  fi
+
+  # 获取文件大小函数，以MB或KB为单位
+  get_file_size() {
+    local file_size
+    file_size=$(stat -f "%z" "$1") # macOS 用法
+    if [ "$file_size" -lt 1048576 ]; then
+      echo "scale=2; $file_size / 1024" | bc
+    else
+      echo "scale=2; $file_size / 1024 / 1024" | bc
+    fi
+  }
+
+  # 打印文件大小
+  print_file_size() {
+    local size
+    local file_size_bytes
+    file_size_bytes=$(stat -f "%z" "$1") # macOS 用法
+    if [ "$file_size_bytes" -lt 1048576 ]; then
+      size=$(get_file_size "$1")
+      echo "File size of '$1': ${size}KB"
+    else
+      size=$(get_file_size "$1")
+      echo "File size of '$1': ${size}MB"
+    fi
+  }
+
+  # 打印压缩前文件大小
+  print_file_size "$file"
+
+  # 处理 jpg 和 jpeg 文件
+  if [[ "$file" =~ \.(jpg|jpeg)$ ]]; then
+    echo "Compressing jpg/jpeg file..."
+    magick "$file" -quality "$resize_quality" "$file"
+    echo "File $file compressed with quality $resize_quality."
+  fi
+
+  # 处理 png 文件
+  if [[ "$file" =~ \.png$ ]]; then
+    echo "Resizing png file..."
+    pngquant --quality=$resize_quality --force --output "$file" "$file"
+    echo "File $file resized to ${resize_quality}%."
+  fi
+
+  # 打印压缩后文件大小
+  print_file_size "$file"
 }
 ##############################  最终调用 ############################
 
