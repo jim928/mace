@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.121"
+version="0.1.122"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -781,7 +781,7 @@ gitGlobal() {
 pubCleanGet() {
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     flutter clean
-    deletelock
+    deleteAllLockFiles
     flutter pub get
   else
     echo "当前目录不是一个Git仓库，操作未执行。"
