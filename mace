@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.122"
+version="0.1.123"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -900,6 +900,21 @@ reduceImage() {
   # 打印压缩后文件大小
   print_file_size "$file"
 }
+
+cleanmac() {
+  # Check if mac-cleanup is already installed
+  if ! command -v mac-cleanup &>/dev/null; then
+    # Tap the repository
+    brew tap fwartner/tap
+
+    # Install mac-cleanup
+    brew install fwartner/tap/mac-cleanup
+  fi
+
+  # Run mac-cleanup
+  mac-cleanup
+}
+
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -946,6 +961,7 @@ functions=(
   "installadb:installadb"
   "find:find_func"
   "img:reduceImage"
+  "cleanmac:cleanmac"
   "test:testFunc"
 )
 
