@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.123"
+version="0.1.124"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -915,6 +915,19 @@ cleanmac() {
   mac-cleanup
 }
 
+ipa() {
+  echo "安装ipatool"
+  echo "brew tap majd/repo"
+  echo "brew install ipatool"
+  echo "登录苹果账号"
+  echo "ipatool auth login --emial xxx --password xx"
+  echo "搜索与下载"
+  echo "ipatool search xxx"
+  echo "ipatool download -b com.x.x"
+  echo "如果遇到下面错误："
+  echo "Your Apple ID does not have a license for this app. Download the app on an iOS device to obtain a license."
+  echo "现在设备上下载一个，然后再使用该脚本下载。"
+}
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -962,6 +975,7 @@ functions=(
   "find:find_func"
   "img:reduceImage"
   "cleanmac:cleanmac"
+  "ipa:ipa"
   "test:testFunc"
 )
 
