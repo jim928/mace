@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.127"
+version="0.1.128"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -920,6 +920,9 @@ resetpwd() {
   「resetpassword」回车运行，调出密码重置工具。选择包含密码的启动磁盘卷宗、需重设密码的用户账户；输入并确认新的用户密码，点击「重设」。"
   echo "重启完成后，使用新密码登录即可。"
 }
+screenchange() {
+  echo "mac屏幕坏了扩展屏切换快捷键 command和亮度减，按下2秒后就站起来了，很快屏幕直接变成了主屏镜像。"
+}
 
 ipa() {
   echo "安装ipatool"
@@ -982,6 +985,7 @@ functions=(
   "img:reduceImage"
   "cleanmac:cleanmac"
   "resetpwd:resetpwd"
+  "screenchange:screenchange"
   "ipa:ipa"
   "test:testFunc"
 )
