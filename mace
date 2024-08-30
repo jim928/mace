@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.129"
+version="0.1.130"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -944,18 +944,27 @@ rar() {
   echo "unrar filepath"
   echo "文件将会解压到当前目录下"
 
-  rar_file="$1"
+  local rar_file="$1"
 
+  # 检查是否安装了 `unar`
   if ! command -v unar &>/dev/null; then
     echo "unar 未安装，正在安装..."
     brew install unar
   fi
 
-  if [[ -f "$rar_file" ]]; then
-    echo "正在解压 $rar_file..."
-    unar "$rar_file"
+  # 检查输入的文件是否以 .rar 结尾
+  if [[ "$rar_file" == *.rar ]]; then
+    # 获取 .rar 文件所在的目录
+    local dir
+    dir=$(dirname "$rar_file")
+
+    # 解压文件到同一目录
+    echo "正在解压 $rar_file 到 $dir 目录中..."
+    unar -output-directory "$dir" "$rar_file"
+
+    echo "解压完成."
   else
-    echo "找不到指定的文件: $rar_file"
+    echo "输入的文件不是 .rar 文件."
   fi
 }
 ##############################  最终调用 ############################
