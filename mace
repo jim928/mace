@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.134"
+version="0.1.135"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -1077,7 +1077,7 @@ importSettings() {
         cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
         print_color "$GREEN" "Settings copied to $app."
       else
-        echo "$app configuration directory not found."
+        echo "$app not found."
       fi
     done
   done
