@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.133"
+version="0.1.134"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -673,9 +673,9 @@ configMaceDevTable() {
 
   # List of JetBrains IDEs to try, including IntelliJ IDEA Community Edition
   for app in "${jetbrains_apps[@]}"; do
-    echo "Attempting to open ~/.mace with $app..."
-    if open -a "$app" "$HOME/.mace"; then
-      echo "Opened ~/.mace with $app."
+    echo "Attempting to open ~/.mace/mace with $app..."
+    if open -a "$app" "$HOME/.mace/mace"; then
+      echo "Opened ~/.mace/mace with $app."
       break
     else
       echo "$app failed to open ~/.mace. Trying next..."
@@ -1096,7 +1096,6 @@ options=(
   "-h:usage"
   "-help:usage"
   "-v:echo ${version}"
-  "-version:echo ${version}"
   "dev:configMaceDevTable"
   "importsettings:importSettings"
 )
@@ -1149,6 +1148,11 @@ while (($# > 0)); do
   # 如果参数以 .rar 结尾，直接调用 rar() 方法
   if [[ "$1" == *.rar ]]; then
     rar "$1"
+    exit
+  fi
+
+  if [[ "$1" == "-v" ]]; then
+    echo "${version}"
     exit
   fi
 
