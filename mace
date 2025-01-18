@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.131"
+version="0.1.132"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -480,7 +480,11 @@ makeMaceDevFolder() {
   echo "makeMaceDevFolder"
   createMaceFolder
   cd "$maceWorkDir" || echo "cd to path failed :$maceWorkDir"
-  git clone "${maceGitUrl}"
+  if [ -d "mace" ]; then
+    echo "Directory mace already exists. Skipping clone."
+  else
+    git clone "${maceGitUrl}"
+  fi
 }
 
 #################### publish new version of mace ####################
@@ -626,6 +630,59 @@ showColors() {
   echo "透明度从100%到0%的16进制值及对应百分比："
   colorList="100% — FF,99% — FC,98% — FA,97% — F7,96% — F5,95% — F2,94% — F0,93% — ED,92% — EB,91% — E8,90% — E6,89% — E3,88% — E0,87% — DE,86% — DB,85% — D9,84% — D6,83% — D4,82% — D1,81% — CF,80% — CC,79% — C9,78% — C7,77% — C4,76% — C2,75% — BF,74% — BD,73% — BA,72% — B8,71% — B5,70% — B3,69% — B0,68% — AD,67% — AB,66% — A8,65% — A6,64% — A3,63% — A1,62% — 9E,61% — 9C,60% — 99,59% — 96,58% — 94,57% — 91,56% — 8F,55% — 8C,54% — 8A,53% — 87,52% — 85,51% — 82,50% — 80,49% — 7D,48% — 7A,47% — 78,46% — 75,45% — 73,44% — 70,43% — 6E,42% — 6B,41% — 69,40% — 66,39% — 63,38% — 61,37% — 5E,36% — 5C,35% — 59,34% — 57,33% — 54,32% — 52,31% — 4F,30% — 4D,29% — 4A,28% — 47,27% — 45,26% — 42,25% — 40,24% — 3D,23% — 3B,22% — 38,21% — 36,20% — 33,19% — 30,18% — 2E,17% — 2B,16% — 29,15% — 26,14% — 24,13% — 21,12% — 1F,11% — 1C,10% — 1A,9% — 17,8% — 14,7% — 12,6% — 0F,5% — 0D,4% — 0A,3% — 08,2% — 05,1% — 03,0% — 00"
   echo "$colorList" | tr ',' '\n'
+}
+
+configMaceDevTable() {
+  # Use ANSI escape codes for colored output
+  RED='\033[31m'
+  NC='\033[0m' # No Color
+
+  # Check if the .mace directory exists in the home directory, if not, create it
+  if [ ! -d "$HOME/.mace" ]; then
+    mkdir "$HOME/.mace"
+    echo ".mace directory created in home directory."
+  else
+    echo ".mace directory already exists."
+  fi
+  # Change directory to ~/.mace
+  cd "$HOME/.mace"
+  # Check if the .mace directory is empty before cloning
+     echo "Cloning repository from $maceGitUrl into ~/.mace/mace..."
+    if [ -d "$HOME/.mace/mace" ]; then
+      echo "Directory ~/.mace/mace already exists. Skipping clone."
+    else
+      if git clone "$maceGitUrl" "$HOME/.mace/mace"; then
+        echo "Repository cloned successfully into ~/.mace/mace."
+      else
+        echo -e "${RED}Failed to clone repository into ~/.mace/mace. Please check your SSH permissions.${NC}"
+      fi
+    fi
+
+    echo "Cloning repository from $homebrew_mace_url into ~/.mace/homebrew-mace..."
+    if [ -d "$HOME/.mace/homebrew-mace" ]; then
+      echo "Directory ~/.mace/homebrew-mace already exists. Skipping clone."
+    else
+      if git clone "$homebrew_mace_url" "$HOME/.mace/homebrew-mace"; then
+        echo "Homebrew-mace repository cloned successfully into ~/.mace/homebrew-mace."
+      else
+        echo -e "${RED}Failed to clone homebrew-mace repository into ~/.mace/homebrew-mace. Please check your SSH permissions.${NC}"
+      fi
+    fi
+
+  # List of JetBrains IDEs to try, including IntelliJ IDEA Community Edition
+  jetbrains_apps=("PyCharm" "GoLand" "IntelliJ IDEA" "IntelliJ IDEA CE" "WebStorm" "CLion" "PhpStorm" "RubyMine" "DataGrip")
+
+  # Try to open the .mace directory with each JetBrains IDE
+  for app in "${jetbrains_apps[@]}"; do
+    echo "Attempting to open ~/.mace with $app..."
+    if open -a "$app" "$HOME/.mace"; then
+      echo "Opened ~/.mace with $app."
+      break
+    else
+      echo "$app failed to open ~/.mace. Trying next..."
+    fi
+  done
+
 }
 
 makessh() {
@@ -967,6 +1024,10 @@ rar() {
     echo "输入的文件不是 .rar 文件."
   fi
 }
+openWithPyCharm() {
+  echo "Opening ~/.mace with PyCharm..."
+  open -a "PyCharm" "$HOME/.mace"
+}
 ##############################  最终调用 ############################
 
 # 定义选项和对应的函数
@@ -975,6 +1036,7 @@ options=(
   "-help:usage"
   "-v:echo ${version}"
   "-version:echo ${version}"
+  "dev:configMaceDevTable"
 )
 # 定义功能和对应的函数
 functions=(
@@ -1018,6 +1080,7 @@ functions=(
   "screenchange:screenchange"
   "ipa:ipa"
   "test:testFunc"
+  "pycharm:openWithPyCharm"
 )
 
 while (($# > 0)); do
