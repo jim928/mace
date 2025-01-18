@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.139"
+version="0.1.140"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -694,7 +694,13 @@ importSettings() {
       echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your SSH permissions.${NC}"
     fi
   else
-    echo "Directory ~/.mace/dev_settings already exists. Skipping clone."
+    echo "Directory ~/.mace/dev_settings already exists. Attempting to update the repository..."
+    cd "$HOME/.mace/dev_settings"
+    if git pull; then
+      echo "Repository updated successfully."
+    else
+      echo -e "${RED}Failed to update the repository. Please check your network connection and permissions.${NC}"
+    fi
   fi
 
   # Iterate over JetBrains IDEs
