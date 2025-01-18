@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.137"
+version="0.1.138"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -730,6 +730,54 @@ print_color() {
   echo -e "\033[${color_code}m${text}\033[0m"
 }
 
+uploadSettings() {
+  # uploadSettings 方法说明：
+  # 该方法用于同步 JetBrains IDE 的设置到 dev_settings 目录。
+  # 方法逻辑如下：
+  # 1. 遍历所有配置的 JetBrains IDE。
+  # 2. 对于每个 IDE，检查 keymaps 和 templates 目录。
+  # 3. 将每个目录中的所有非隐藏文件复制到 dev_settings 中对应的目录。
+  # 4. 使用 Git 检查 dev_settings 目录中的更改。
+  # 5. 如果检测到更改，提交并推送到远程仓库，然后退出循环，确保每次调用最多只会产生一次提交。
+  # 6. 如果没有检测到更改，继续检查下一个目录。
+  # 7. 如果所有目录都没有更改，输出提示信息。
+
+  local repo_dir="$HOME/.mace/dev_settings"
+  echo "Syncing settings from JetBrains IDEs to $repo_dir..."
+  
+  # Iterate over JetBrains IDEs
+  for app in "${jetbrains_apps[@]}"; do
+    for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
+      if [ -d "$config_dir" ]; then
+        for sub_dir in keymaps templates; do
+          if [ -d "$config_dir/$sub_dir" ]; then
+            echo "Copying files from $sub_dir in $config_dir to $repo_dir..."
+            # Copy all non-hidden files to the destination directory
+            cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
+            
+            # Check for changes and commit
+            cd "$repo_dir"
+            if [ -n "$(git status --porcelain)" ]; then
+              git add .
+              git commit -m "Update $sub_dir from $app"
+              git push origin main
+              print_color "$GREEN" "Changes in $sub_dir from $app uploaded successfully."
+              return 0  # Exit the function after a successful commit
+            else
+              print_color "$GREEN" "No changes to commit for $sub_dir from $app."
+            fi
+          else
+            print_color "$RED" "$sub_dir directory not found in $app."
+          fi
+        done
+      else
+        print_color "$RED" "$app configuration directory not found."
+      fi
+    done
+  done
+  print_color "$GREEN" "No changes detected for any JetBrains IDEs."
+}
+
 options=(
   "-h:usage"
   "-help:usage"
@@ -780,7 +828,6 @@ functions=(
   "screenchange:screenchange"
   "ipa:ipa"
   "test:testFunc"
-  "pycharm:openWithPyCharm"
 )
 
 while (($# > 0)); do
