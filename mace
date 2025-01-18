@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.141"
+version="0.1.142"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -760,8 +760,9 @@ uploadSettings() {
       if [ -d "$config_dir" ]; then
         for sub_dir in keymaps templates; do
           if [ -d "$config_dir/$sub_dir" ]; then
-            echo "Copying files from $sub_dir in $config_dir to $repo_dir..."
-            # Copy all non-hidden files to the destination directory
+            echo "Syncing $sub_dir from $config_dir to $repo_dir..."
+            rm -rf "$repo_dir/$sub_dir"  # Clear the destination directory
+            mkdir -p "$repo_dir/$sub_dir"
             cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
             
             # Check for changes and commit
@@ -791,7 +792,9 @@ uploadSettings() {
     if [ -d "$config_dir" ]; then
       for sub_dir in keymaps templates; do
         if [ -d "$config_dir/$sub_dir" ]; then
-          echo "Copying files from $sub_dir in $config_dir to $repo_dir..."
+          echo "Syncing $sub_dir from $config_dir to $repo_dir..."
+          rm -rf "$repo_dir/$sub_dir"  # Clear the destination directory
+          mkdir -p "$repo_dir/$sub_dir"
           cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
           
           # Check for changes and commit
