@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.132"
+version="0.1.133"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -632,6 +632,8 @@ showColors() {
   echo "$colorList" | tr ',' '\n'
 }
 
+jetbrains_apps=("PyCharm" "GoLand" "IntelliJ IDEA" "IntelliJ IDEA CE" "WebStorm" "CLion" "PhpStorm" "RubyMine" "DataGrip")
+
 configMaceDevTable() {
   # Use ANSI escape codes for colored output
   RED='\033[31m'
@@ -670,9 +672,6 @@ configMaceDevTable() {
     fi
 
   # List of JetBrains IDEs to try, including IntelliJ IDEA Community Edition
-  jetbrains_apps=("PyCharm" "GoLand" "IntelliJ IDEA" "IntelliJ IDEA CE" "WebStorm" "CLion" "PhpStorm" "RubyMine" "DataGrip")
-
-  # Try to open the .mace directory with each JetBrains IDE
   for app in "${jetbrains_apps[@]}"; do
     echo "Attempting to open ~/.mace with $app..."
     if open -a "$app" "$HOME/.mace"; then
@@ -683,6 +682,34 @@ configMaceDevTable() {
     fi
   done
 
+}
+
+importSettings() {
+  # Clone the dev_settings repository into the ~/.mace/dev_settings directory if it doesn't exist
+  if [ ! -d "$HOME/.mace/dev_settings" ]; then
+    echo "Cloning repository from git@github.com:Griffinsin/dev_settings.git into ~/.mace/dev_settings..."
+    if git clone "git@github.com:Griffinsin/dev_settings.git" "$HOME/.mace/dev_settings"; then
+      echo "Repository cloned successfully into ~/.mace/dev_settings."
+    else
+      echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your SSH permissions.${NC}"
+    fi
+  else
+    echo "Directory ~/.mace/dev_settings already exists. Skipping clone."
+  fi
+
+  # Iterate over JetBrains IDEs
+  for app in "${jetbrains_apps[@]}"; do
+    # Use a wildcard to match versioned directories
+    for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
+      if [ -d "$config_dir" ]; then
+        cp -r "$HOME/.mace/dev_settings/keymaps" "$config_dir"
+        cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
+        print_color "$GREEN" "Settings copied to $app."
+      else
+        echo "$app configuration directory not found."
+      fi
+    done
+  done
 }
 
 makessh() {
@@ -1028,15 +1055,50 @@ openWithPyCharm() {
   echo "Opening ~/.mace with PyCharm..."
   open -a "PyCharm" "$HOME/.mace"
 }
-##############################  最终调用 ############################
+importSettings() {
+  # Clone the dev_settings repository into the ~/.mace/dev_settings directory if it doesn't exist
+  if [ ! -d "$HOME/.mace/dev_settings" ]; then
+    echo "Cloning repository from git@github.com:Griffinsin/dev_settings.git into ~/.mace/dev_settings..."
+    if git clone "git@github.com:Griffinsin/dev_settings.git" "$HOME/.mace/dev_settings"; then
+      echo "Repository cloned successfully into ~/.mace/dev_settings."
+    else
+      echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your SSH permissions.${NC}"
+    fi
+  else
+    echo "Directory ~/.mace/dev_settings already exists. Skipping clone."
+  fi
 
-# 定义选项和对应的函数
+  # Iterate over JetBrains IDEs
+  for app in "${jetbrains_apps[@]}"; do
+    # Use a wildcard to match versioned directories
+    for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
+      if [ -d "$config_dir" ]; then
+        cp -r "$HOME/.mace/dev_settings/keymaps" "$config_dir"
+        cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
+        print_color "$GREEN" "Settings copied to $app."
+      else
+        echo "$app configuration directory not found."
+      fi
+    done
+  done
+}
+
+print_color() {
+  local color_code="$1"
+  local text="$2"
+  echo -e "\033[${color_code}m${text}\033[0m"
+}
+
+GREEN='32'
+RED='31'
+
 options=(
   "-h:usage"
   "-help:usage"
   "-v:echo ${version}"
   "-version:echo ${version}"
   "dev:configMaceDevTable"
+  "importsettings:importSettings"
 )
 # 定义功能和对应的函数
 functions=(
