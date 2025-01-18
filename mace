@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.138"
+version="0.1.139"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -721,13 +721,16 @@ importSettings() {
       echo "Android Studio configuration directory not found."
     fi
   done
-}
 
-
-print_color() {
-  local color_code="$1"
-  local text="$2"
-  echo -e "\033[${color_code}m${text}\033[0m"
+  # Handle Xcode CodeSnippets
+  local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
+  if [ -d "$HOME/.mace/dev_settings/CodeSnippets" ]; then
+    mkdir -p "$xcode_snippets_dir"
+    cp -r "$HOME/.mace/dev_settings/CodeSnippets"/* "$xcode_snippets_dir"
+    print_color "$GREEN" "CodeSnippets copied to Xcode."
+  else
+    echo "CodeSnippets directory not found in dev_settings."
+  fi
 }
 
 uploadSettings() {
@@ -775,7 +778,65 @@ uploadSettings() {
       fi
     done
   done
+
+  # Handle Android Studio
+  echo "Syncing settings from Android Studio to $repo_dir..."
+  for config_dir in "$HOME/Library/Application Support/Google/AndroidStudio"*; do
+    if [ -d "$config_dir" ]; then
+      for sub_dir in keymaps templates; do
+        if [ -d "$config_dir/$sub_dir" ]; then
+          echo "Copying files from $sub_dir in $config_dir to $repo_dir..."
+          cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
+          
+          # Check for changes and commit
+          cd "$repo_dir"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "Update $sub_dir from Android Studio"
+            git push origin main
+            print_color "$GREEN" "Changes in $sub_dir from Android Studio uploaded successfully."
+            return 0  # Exit the function after a successful commit
+          else
+            print_color "$GREEN" "No changes to commit for $sub_dir from Android Studio."
+          fi
+        else
+          print_color "$RED" "$sub_dir directory not found in Android Studio."
+        fi
+      done
+    else
+      echo "Android Studio configuration directory not found."
+    fi
+  done
+
+  # Handle Xcode CodeSnippets
+  local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
+  if [ -d "$xcode_snippets_dir" ]; then
+    echo "Copying Xcode CodeSnippets to $repo_dir..."
+    mkdir -p "$repo_dir/CodeSnippets"
+    cp -r "$xcode_snippets_dir"/* "$repo_dir/CodeSnippets/"
+    
+    # Check for changes and commit
+    cd "$repo_dir"
+    git add -A  # Ensure all files in CodeSnippets are tracked
+    if [ -n "$(git status --porcelain)" ]; then
+      git commit -m "Update CodeSnippets from Xcode"
+      git push origin main
+      print_color "$GREEN" "Xcode CodeSnippets uploaded successfully."
+      return 0  # Exit the function after a successful commit
+    else
+      print_color "$GREEN" "No changes to commit for Xcode CodeSnippets."
+    fi
+  else
+    echo "Xcode CodeSnippets directory not found."
+  fi
+
   print_color "$GREEN" "No changes detected for any JetBrains IDEs."
+}
+
+print_color() {
+  local color_code="$1"
+  local text="$2"
+  echo -e "\033[${color_code}m${text}\033[0m"
 }
 
 options=(
