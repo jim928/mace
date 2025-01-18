@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.135"
+version="0.1.136"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -712,376 +712,55 @@ importSettings() {
   done
 }
 
-makessh() {
-  read -p "Enter the key name suffix (the full key name will be id_ed25519_[your_input]): " key_suffix
-  key_name="id_ed25519_$key_suffix"
-  key_path="$HOME/.ssh/$key_name"
+uploadSettings() {
+  # uploadSettings 方法说明：
+  # 该方法用于同步 JetBrains IDE 的设置到 dev_settings 目录。
+  # 方法逻辑如下：
+  # 1. 遍历所有配置的 JetBrains IDE。
+  # 2. 对于每个 IDE，检查 keymaps 和 templates 目录。
+  # 3. 将每个目录中的所有非隐藏文件复制到 dev_settings 中对应的目录。
+  # 4. 使用 Git 检查 dev_settings 目录中的更改。
+  # 5. 如果检测到更改，提交并推送到远程仓库，然后退出循环，确保每次调用最多只会产生一次提交。
+  # 6. 如果没有检测到更改，继续检查下一个目录。
+  # 7. 如果所有目录都没有更改，输出提示信息。
 
-  # Generate the SSH key
-  read -p "Enter your email associated with your GitHub account: " email
-  ssh-keygen -t ed25519 -C "$email" -f "$key_path"
-
-  # Start the ssh-agent in the background
-  eval "$(ssh-agent -s)"
-
-  # On macOS, use -K to store the passphrase in your keychain
-  ssh-add -K "$key_path"
-
-  # Copy the SSH public key to your clipboard
-  pbcopy <"${key_path}.pub"
-  echo "The SSH public key has been copied to your clipboard. Please add it to your GitHub account."
-
-  # Instructions to add the key to GitHub
-  echo "1. Go to GitHub and log in."
-  echo "2. Click on your profile photo, then click Settings."
-  echo "3. In the user settings sidebar, click SSH and GPG keys."
-  echo "4. Click New SSH key or Add SSH key."
-  echo "5. In the Title field, add a descriptive label for the new key."
-  echo "6. Paste your key into the Key field (it's already on your clipboard)."
-  echo "7. Click Add SSH key."
-  echo "8. If prompted, confirm your GitHub password."
-
-  # Check if the current directory is a Git repository
-  if [ -d ".git" ]; then
-    read -p "Do you want to configure Git to use this SSH key for GitHub operations in this repository? (y/n): " response
-    case "$response" in
-    [yY][eE][sS] | [yY])
-      # Set the specific SSH key for GitHub operations in this repository
-      git config core.sshCommand "ssh -i $key_path -F /dev/null"
-      echo "Git is now configured to use this SSH key for GitHub operations in this repository."
-      ;;
-    *)
-      echo "You can manually configure Git to use this SSH key for GitHub operations in this repository by executing the following command:"
-      echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
-      ;;
-    esac
-  fi
-}
-
-gitHelp() {
-  echo "----------------------------"
-  echo "指定仓库使用某一个sshkey文件"
-  echo "git config --global core.sshCommand \"ssh -i /Users/griffin/.ssh/id_ed25519_gitlab -F /dev/null\""
-  echo "检查是否设置成功"
-  echo "git config --get core.sshCommand"
-  echo "----------------------------"
-  echo "clone的时候指定使用某个sshkey"
-  echo "GIT_SSH_COMMAND='ssh -i /Users/griffin/.ssh/id_ed25519_gitlab' git clone git@gitlab.com:abc/def.git"
-  echo "----------------------------"
-  echo "merge 冲突 操作帮助"
-  echo "取消本次合并 git merge --abort"
-  echo "处理冲突后发现某个文件需要重新处理一次冲突 git checkout --conflict=merge -- example.dart"
-}
-gitCloneOther() {
-  echo "将仓库A的分支branch1代码合并到仓库B的分支branch2"
-  echo "git clone git@github.com:user/repoB.git"
-  echo "cd repoB"
-  echo "git remote add repoA git@github.com:user/repoA.git"
-  echo "git fetch repoA"
-  echo "git checkout branch2"
-  echo "git merge repoA/branch1"
-  echo "然后处理合并产生的冲突"
-}
-listAllPub() {
-  echo "列出所有.pub公钥文件，这些文件会添加到github或gitlab网站上"
-  echo "for file in ~/.ssh/*.pub; do echo "$file"; cat "$file"; echo; done"
-  for file in ~/.ssh/*.pub; do
-    echo "$file"
-    cat "$file"
-    echo
-  done
-}
-sshAddAll() {
-  #!/bin/bash
-
-  # 查找 ~/.ssh 目录下的所有私钥文件
-  private_keys=($(find ~/.ssh -type f -name '*.pub' -exec basename {} .pub \;))
-
-  # 初始化一个数组来存储唯一的私钥文件路径
-  unique_keys=()
-
-  # 遍历私钥文件列表，确保每个私钥文件对应的公钥文件也存在，然后添加到数组中
-  for key in "${private_keys[@]}"; do
-    if [[ -f ~/.ssh/"$key" && -f ~/.ssh/"$key".pub ]]; then
-      # 检查私钥文件是否已经存在于数组中
-      exists=false
-      for unique_key in "${unique_keys[@]}"; do
-        if [[ "$key" == "$unique_key" ]]; then
-          exists=true
-          break
-        fi
-      done
-
-      # 如果私钥文件不在数组中，则添加到数组并添加到 SSH agent
-      if ! "$exists"; then
-        unique_keys+=("$key")
-        echo "Identity added: ~/.ssh/$key"
-        # 添加私钥文件到 SSH agent
-        ssh-add ~/.ssh/"$key"
-      fi
-    fi
-  done
-
-  # 打印 SSH agent 中的私钥文件
-  echo "SSH agent 中的私钥文件："
-  ssh-add -l
-}
-battlenet() {
-  echo "1,Delete the Battle Net folder in /Users/Shared/"
-  echo "2,Download the battle.net agent in /en-US/ region, I’m not allowed to post links here."
-  echo "3,Open Terminal on Mac and copy this code: open -a ~/Downloads/Battle.net-Setup.app --args --locale=enUS --region=US --session=, then tap Enter."
-}
-setssh() {
-  # 检查当前目录是否是Git仓库
-  if git rev-parse --git-dir >/dev/null 2>&1; then
-    echo "当前目录是一个Git仓库。"
-
-    # 列出~/.ssh目录下所有的私钥文件
-    echo "可用的SSH密钥文件："
-    key_files=$(find ~/.ssh -type f ! -name "*.pub" ! -name "config" ! -name "known_hosts")
-    select key_path in $key_files; do
-      if [ -n "$key_path" ]; then
-        # 设置选定的SSH密钥
-        git config core.sshCommand "ssh -i $key_path -F /dev/null"
-        echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
-        echo "已设置SSH密钥：$key_path"
-        break
-      else
-        echo "无效的选择。"
-      fi
-    done
-  else
-    echo "当前目录不是一个Git仓库。"
-  fi
-}
-gitGlobal() {
-  echo "# 查看所有全局配置"
-  echo "git config --global --list"
-  echo "# 设置全局用户名"
-  echo "git config --global user.name \"Alice\""
-  echo "# 设置全局邮箱"
-  echo "git config --global user.email \"alice@example.com\""
-}
-pubCleanGet() {
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    flutter clean
-    deleteAllLockFiles
-    flutter pub get
-  else
-    echo "当前目录不是一个Git仓库，操作未执行。"
-  fi
-}
-#用Android studio 打开当前文件夹
-openWithAndroidStudio() {
-  open -a "Android Studio" .
-}
-setLunchKey() {
-  echo "当电脑的功能键里没有启动台按钮时，设置启动台的快捷键"
-  echo "系统设置--键盘--键盘快捷键--启动台与程序坞--显示启动台"
-}
-installadb() {
-  echo "安装adb"
-  echo "brew install --cask android-platform-tools"
-  brew install --cask android-platform-tools
-}
-find_func() {
-  search_term="$2"
-
-  echo "如果要查找所有子目录 find .  -name \"*$search_term*\" "
-  echo "如果仅查找当前目录 find .  -name *$search_term* "
-
-  if [ -z "$search_term" ]; then
-    echo "Usage: find <search_term>"
-    exit 1
-  fi
-
-  # 使用 find 命令来查找当前目录下所有文件名包含指定字符串的文件
-  find . -name "*$search_term*"
-}
-john() {
-  echo "安装john"
-  #  http://downloads.skullsecurity.org/passwords/rockyou.txt.bz2 下载的john的字典
-  #  sudo gunzip /usr/share/wordlists/rockyou.txt.gz  解压的john的字典
-  #  echo "安装john"
-  #  brew install john
-}
-reduceImage() {
-  echo "安装imagemagick说明"
-  echo "brew install imagemagick"
-  echo "magick input.jpg -quality 85 output.jpg"
-  echo "magick input.png -resize 50% output.png"
-
-  file="$2"
-  quality="$3"
-
-  # 检查文件类型
-  if [[ ! "$file" =~ \.(jpg|jpeg|png)$ ]]; then
-    echo "The file must be a jpg, jpeg, or png type."
-    return
-  fi
-
-  # 检查是否已安装 ImageMagick
-  if ! command -v magick &>/dev/null; then
-    echo "ImageMagick is not installed. Installing now..."
-    brew install imagemagick
-  fi
-
-  # 检查是否已安装 pngquant
-  if [[ "$file" =~ \.png$ ]] && ! command -v pngquant &>/dev/null; then
-    echo "pngquant is not installed. Installing now..."
-    brew install pngquant
-  fi
-
-  # 检查质量参数是否有效
-  if [[ "$quality" =~ ^[0-9]+$ ]] && [ "$quality" -gt 0 ] && [ "$quality" -lt 100 ]; then
-    resize_quality="$quality"
-  else
-    resize_quality=50
-  fi
-
-  # 获取文件大小函数，以MB或KB为单位
-  get_file_size() {
-    local file_size
-    file_size=$(stat -f "%z" "$1") # macOS 用法
-    if [ "$file_size" -lt 1048576 ]; then
-      echo "scale=2; $file_size / 1024" | bc
-    else
-      echo "scale=2; $file_size / 1024 / 1024" | bc
-    fi
-  }
-
-  # 打印文件大小
-  print_file_size() {
-    local size
-    local file_size_bytes
-    file_size_bytes=$(stat -f "%z" "$1") # macOS 用法
-    if [ "$file_size_bytes" -lt 1048576 ]; then
-      size=$(get_file_size "$1")
-      echo "File size of '$1': ${size}KB"
-    else
-      size=$(get_file_size "$1")
-      echo "File size of '$1': ${size}MB"
-    fi
-  }
-
-  # 打印压缩前文件大小
-  print_file_size "$file"
-
-  # 处理 jpg 和 jpeg 文件
-  if [[ "$file" =~ \.(jpg|jpeg)$ ]]; then
-    echo "Compressing jpg/jpeg file..."
-    magick "$file" -quality "$resize_quality" "$file"
-    echo "File $file compressed with quality $resize_quality."
-  fi
-
-  # 处理 png 文件
-  if [[ "$file" =~ \.png$ ]]; then
-    echo "Resizing png file..."
-    pngquant --quality=$resize_quality --force --output "$file" "$file"
-    echo "File $file resized to ${resize_quality}%."
-  fi
-
-  # 打印压缩后文件大小
-  print_file_size "$file"
-}
-
-cleanmac() {
-  # Check if mac-cleanup is already installed
-  if ! command -v mac-cleanup &>/dev/null; then
-    # Tap the repository
-    brew tap fwartner/tap
-
-    # Install mac-cleanup
-    brew install fwartner/tap/mac-cleanup
-  fi
-
-  # Run mac-cleanup
-  mac-cleanup
-}
-resetpwd() {
-  echo "重启mac并同时按下Command+R，进入恢复模式。"
-  echo "进入「菜单栏-实用程序-终端」，输入命令
-  「resetpassword」回车运行，调出密码重置工具。选择包含密码的启动磁盘卷宗、需重设密码的用户账户；输入并确认新的用户密码，点击「重设」。"
-  echo "重启完成后，使用新密码登录即可。"
-}
-screenchange() {
-  echo "mac屏幕坏了扩展屏切换快捷键 command和亮度减，按下2秒后就站起来了，很快屏幕直接变成了主屏镜像。"
-}
-
-ipa() {
-  echo "安装ipatool"
-  echo "brew tap majd/repo"
-  echo "brew install ipatool"
-  echo "登录苹果账号"
-  echo "ipatool auth login --emial xxx --password xx"
-  echo "搜索与下载"
-  echo "ipatool search xxx"
-  echo "ipatool download -b com.x.x"
-  echo "如果遇到下面错误："
-  echo "Your Apple ID does not have a license for this app. Download the app on an iOS device to obtain a license."
-  echo "现在设备上下载一个，然后再使用该脚本下载。"
-}
-
-rar() {
-  echo "如何解压rar文件"
-  echo "brew install unar"
-  echo "unrar filepath"
-  echo "文件将会解压到当前目录下"
-
-  local rar_file="$1"
-
-  # 检查是否安装了 `unar`
-  if ! command -v unar &>/dev/null; then
-    echo "unar 未安装，正在安装..."
-    brew install unar
-  fi
-
-  # 检查输入的文件是否以 .rar 结尾
-  if [[ "$rar_file" == *.rar ]]; then
-    # 获取 .rar 文件所在的目录
-    local dir
-    dir=$(dirname "$rar_file")
-
-    # 解压文件到同一目录
-    echo "正在解压 $rar_file 到 $dir 目录中..."
-    unar -output-directory "$dir" "$rar_file"
-
-    echo "解压完成."
-  else
-    echo "输入的文件不是 .rar 文件."
-  fi
-}
-openWithPyCharm() {
-  echo "Opening ~/.mace with PyCharm..."
-  open -a "PyCharm" "$HOME/.mace"
-}
-importSettings() {
-  # Clone the dev_settings repository into the ~/.mace/dev_settings directory if it doesn't exist
-  if [ ! -d "$HOME/.mace/dev_settings" ]; then
-    echo "Cloning repository from git@github.com:Griffinsin/dev_settings.git into ~/.mace/dev_settings..."
-    if git clone "git@github.com:Griffinsin/dev_settings.git" "$HOME/.mace/dev_settings"; then
-      echo "Repository cloned successfully into ~/.mace/dev_settings."
-    else
-      echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your SSH permissions.${NC}"
-    fi
-  else
-    echo "Directory ~/.mace/dev_settings already exists. Skipping clone."
-  fi
-
+  local repo_dir="$HOME/.mace/dev_settings"
+  echo "Syncing settings from JetBrains IDEs to $repo_dir..."
+  
   # Iterate over JetBrains IDEs
   for app in "${jetbrains_apps[@]}"; do
-    # Use a wildcard to match versioned directories
     for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
       if [ -d "$config_dir" ]; then
-        cp -r "$HOME/.mace/dev_settings/keymaps" "$config_dir"
-        cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
-        print_color "$GREEN" "Settings copied to $app."
+        for sub_dir in keymaps templates; do
+          if [ -d "$config_dir/$sub_dir" ]; then
+            echo "Copying files from $sub_dir in $config_dir to $repo_dir..."
+            # Copy all non-hidden files to the destination directory
+            cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
+            
+            # Check for changes and commit
+            cd "$repo_dir"
+            if [ -n "$(git status --porcelain)" ]; then
+              git add .
+              git commit -m "Update $sub_dir from $app"
+              git push origin main
+              print_color "$GREEN" "Changes in $sub_dir from $app uploaded successfully."
+              return 0  # Exit the function after a successful commit
+            else
+              print_color "$GREEN" "No changes to commit for $sub_dir from $app."
+            fi
+          else
+            print_color "$RED" "$sub_dir directory not found in $app."
+          fi
+        done
       else
-        echo "$app not found."
+        print_color "$RED" "$app configuration directory not found."
       fi
     done
   done
+  print_color "$GREEN" "No changes detected for any JetBrains IDEs."
 }
+
+options+=("uploadsettings:uploadSettings")
 
 print_color() {
   local color_code="$1"
@@ -1089,15 +768,13 @@ print_color() {
   echo -e "\033[${color_code}m${text}\033[0m"
 }
 
-GREEN='32'
-RED='31'
-
 options=(
   "-h:usage"
   "-help:usage"
   "-v:echo ${version}"
   "dev:configMaceDevTable"
   "importsettings:importSettings"
+  "uploadsettings:uploadSettings"
 )
 # 定义功能和对应的函数
 functions=(
