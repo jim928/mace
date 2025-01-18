@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.140"
+version="0.1.141"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -817,7 +817,8 @@ uploadSettings() {
   # Handle Xcode CodeSnippets
   local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
   if [ -d "$xcode_snippets_dir" ]; then
-    echo "Copying Xcode CodeSnippets to $repo_dir..."
+    echo "Syncing Xcode CodeSnippets to $repo_dir..."
+    rm -rf "$repo_dir/CodeSnippets"  # Clear the destination directory
     mkdir -p "$repo_dir/CodeSnippets"
     cp -r "$xcode_snippets_dir"/* "$repo_dir/CodeSnippets/"
     
