@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.150"
+version="0.1.151"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -525,11 +525,16 @@ configGithub() {
       ssh-add "$key_path"
       echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
 
+      # 调用函数添加新生成的 SSH 密钥到配置
+      add_ssh_key_to_config "$key_path"
+
       # 复制 SSH 公钥到剪贴板
       pbcopy < "$key_path.pub"
       echo "SSH 公钥已复制到剪贴板，请将其添加到 GitHub。"
     else
-      read -p "已找到现有的 SSH 公钥，是否需要新建一个？(y/n): " create_new_key
+      echo "已找到以下现有的 SSH 公钥："
+      ls ~/.ssh/*.pub
+      read -p "是否需要新建一个 SSH 密钥？(y/n): " create_new_key
       if [ "$create_new_key" = "y" ]; then
         read -p "请输入 SSH 密钥文件名的后缀: " key_suffix
         key_path="$HOME/.ssh/id_ed25519_$key_suffix"
@@ -546,6 +551,9 @@ configGithub() {
         eval "$(ssh-agent -s)"
         ssh-add "$key_path"
         echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
+
+        # 调用函数添加新生成的 SSH 密钥到配置
+        add_ssh_key_to_config "$key_path"
 
         # 复制 SSH 公钥到剪贴板
         pbcopy < "$key_path.pub"
@@ -565,6 +573,11 @@ configGithub() {
       fi
     fi
 
+    # 在尝试 SSH 连接之前，确保添加 SSH 密钥到配置
+    if [ -n "$key_path" ]; then
+      add_ssh_key_to_config "$key_path"
+    fi
+
     # 执行 GitHub CLI 登录
     echo "请使用 GitHub CLI 登录..."
     gh auth login
@@ -582,6 +595,22 @@ configGithub() {
   fi
 
   # 在此处继续实现其他步骤
+  # 函数：添加 SSH 密钥到 SSH 配置
+  add_ssh_key_to_config() {
+    local key_path="$1"
+    local config_file="$HOME/.ssh/config"
+
+    # 检查 SSH 配置文件是否存在，不存在则创建
+    if [ ! -f "$config_file" ]; then
+      touch "$config_file"
+      chmod 600 "$config_file"
+    fi
+
+    # 添加密钥配置到 SSH 配置文件
+    echo "Host github.com" >> "$config_file"
+    echo "  IdentityFile $key_path" >> "$config_file"
+    echo "已将 $key_path 添加到 SSH 配置。"
+  }
 }
 
 options=(
