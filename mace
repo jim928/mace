@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.161"
+version="0.1.162"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -8,8 +8,64 @@ maceWorkDir="$HOME/.mace"
 maceGitUrl="git@github.com:jim928/mace.git"
 homebrew_mace_url="git@github.com:jim928/homebrew-mace.git"
 
-# 全局变量存储加密后的密钥字符串
-ENCRYPTED_SSH_KEY="U2FsdGVkX18KfhNSO8JK2J71oRSuo3gSP78SxzJ+sxjgR98gSrlnIFegIMnZHanZQVzmINCpw7MS41OpDwfv/IAAIfApVXW9WmAVDX+3VoJkRDjdpoi+lL/P77E+pDIJhgUw/kbTFJ2C3MIOW4pi9PsoPkpN2L/XlmLrVABQKnz+bOQBOCzvzh6SxqesPl1pB7V5x1NGLDvDyyt2Ta7kXPZLe1cHyDj11Sx6I1f2GjNqZZlf+oU6MoeTtvknVJBcuwVweqGpRtO9yQKiRcBlRq0C8Dfeid9gahO7xMWBrV9vaDI58rD2aggXFuc3CGBWMyjXWu81+QPRewIlSxvtbFzs/2rN38i+2pYxicoIlmlyHcJffAXWERxonH+rA2oLpCqRPwkyp9jZwlIAXL0odkGF6c8R+pq1PnyUqzFBKsOEz2bX6AcTNs0Nr+LISM+hDkfdoV/xlkQGqNJU7ARmBYJfiKr7+cBy5j8LYzWuDLfFh0GBf8fESaM2HlLuy4OL8E5/SE+nYuUeo922u8nTE22flhuv3nfTCVlS4zPVlng="
+# 使用字符串来存储键值对
+ENCRYPTED_SSH_KEYS="mace:U2FsdGVkX18iiJ0E4IvJbKvEtbN5T5UU0AF9JrGfKIiLYdoVRJ/hnob3Tz4Q9xQ4hakPlUkKijAejqHqBX2hLqOm5AtYNFLLD/y/ysxYp3EHhsXjIWfeA03ZKqmty+/kj4yl40O1nPArPgs7JB7LxDxJRa5eoDb6PtG0yGBwQZ2WsX+C1pnJGkWe4yB26kRyNMAmkb8vOPl3j3wnsRILa/F1HHSZp69KTtcgIBFlo6HaBmK6XmEekil8trRiPugUjZck/72YgO3EU0ik6NdvDEA23cshVJjhwx1dxbc7YnqJ4tO+AY6V1V5xClzFN2jFAQ5Xj8LhJzOujjC1bfoovqGlyJXbjgSt3PsF0vDEtJx+jdK+eXhr1ReQmmilgvGmZLa5aw/TzV5LP7BNVNL0Y9UiLyc2A28GlD56YHs1M7BVuW39CwPUUWPpyx3948A077IVM+ksHHmmQfxXNvH/qlGQuRUJwwZXahqhObVuuSJjxkJuuJ2aloKSfn2whR+qaAVWNtTPIgaJ6UpympEk8oK6z6D8cCfPTz1w5xJeEUQ="
+
+# 查找键值对
+find_key() {
+  local key="$1"
+  local pattern="|$key:"
+  local start=${ENCRYPTED_SSH_KEYS#*$pattern}
+  if [[ "$start" != "$ENCRYPTED_SSH_KEYS" ]]; then
+    return 0
+  fi
+  return 1
+}
+
+# 更新或添加键值对
+update_key() {
+  local key="$1"
+  local value="$2"
+  # 改进移除旧的键值对的逻辑
+  current_keys="${ENCRYPTED_SSH_KEYS//${key}:[^|]*/}"
+
+  # 添加新的键值对
+  if [[ -n "$current_keys" ]]; then
+    current_keys+="|"
+  fi
+  current_keys+="$key:$value"
+  ENCRYPTED_SSH_KEYS="$current_keys"
+}
+
+# 更新或添加键值对并注入到脚本中
+inject_key_to_script() {
+  local key="$1"
+  local value="$2"
+  local script_path="$3"
+
+  # 读取当前的 ENCRYPTED_SSH_KEYS
+  local current_keys=$(grep '^ENCRYPTED_SSH_KEYS=' "$script_path" | cut -d'"' -f2)
+
+  # 移除旧的键值对
+  current_keys="${current_keys//${key}:[^|]*/}"
+  # 添加新的键值对
+  if [[ -n "$current_keys" ]]; then
+    current_keys+="|"
+  fi
+  current_keys+="$key:$value"
+
+  echo "Updated keys: $key"
+
+  # 使用 awk 更新脚本中的 ENCRYPTED_SSH_KEYS 变量
+  awk -v new_keys="$current_keys" '/^ENCRYPTED_SSH_KEYS=/ {$0="ENCRYPTED_SSH_KEYS=\""new_keys"\""} 1' "$script_path" > temp_script && mv temp_script "$script_path"
+
+  # 检查 awk 和 mv 命令的执行结果
+  if [[ $? -eq 0 ]]; then
+    echo "Keys successfully injected into script."
+  else
+    echo "Failed to inject keys into script."
+  fi
+}
 
 usage() {
   # 打印可用的方法列表
@@ -537,7 +593,8 @@ configGithub() {
 
   # 尝试 SSH 连接
   echo "尝试 SSH 连接到 GitHub..."
-  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts"
+  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+
   ssh -T git@github.com
   if [ $? -ne 1 ]; then
     echo "SSH 连接失败，检查 SSH 密钥..."
@@ -644,7 +701,6 @@ encrypSSH() {
     return 1
   fi
 
-  # 列出可用的密钥文件供用户选择
   echo "请选择一个 SSH 密钥文件："
   select private_key_path in "${key_files[@]}"; do
     if [ -n "$private_key_path" ]; then
@@ -654,79 +710,111 @@ encrypSSH() {
     fi
   done
 
-  # 提示用户输入用于加密的密码
+  local key_id
+  while true; do
+    read -p "请输入至少4位的标识符: " key_id
+    if [ ${#key_id} -lt 4 ]; then
+      echo "标识符长度必须至少为4位。"
+      continue
+    fi
+
+    if find_key "$key_id"; then
+      read -p "标识符 '$key_id' 已存在，是否覆盖？(y/n): " overwrite_choice
+      if [ "$overwrite_choice" != "y" ]; then
+        continue
+      fi
+    fi
+    break
+  done
+
   echo "请输入用于加密的密码:"
   read -s password
 
-  # 使用本地变量存储加密后的密钥字符串
-  local encrypted_key
-  encrypted_key=$(openssl enc -aes-256-cbc -salt -in "$private_key_path" -base64 -pass pass:"$password" -pbkdf2)
-  echo "私钥已加密并存储到变量中。"
+  local encrypted_key=$(openssl enc -aes-256-cbc -salt -in "$private_key_path" -base64 -pass pass:"$password" -pbkdf2)
 
-  # 将加密后的密钥字符串转换为单行格式
   local single_line_key=$(echo "$encrypted_key" | tr -d '\n')
 
-  # 将单行格式的密钥字符串写入脚本文件中的 ENCRYPTED_SSH_KEY 变量
-  sed -i '' "s|^ENCRYPTED_SSH_KEY=.*|ENCRYPTED_SSH_KEY=\"$single_line_key\"|" "$0"
+  inject_key_to_script "$key_id" "$single_line_key" "$0"
 
+  chmod +x "$0"
 }
 
 restoreSSH() {
   local password
 
-  # 预先将 GitHub 的主机密钥添加到 known_hosts 文件中
-  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts"
+  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
 
-  # 提示用户选择输出路径
-  echo "是否将私钥输出到 ~/.ssh 目录？(回车/任意其他输入)"
-  read -r choice
+  # Parse and list all identifiers
+  echo "可用的标识符："
+  IFS='|' read -ra keys <<< "$ENCRYPTED_SSH_KEYS"
+  local identifiers=()
+  for key in "${keys[@]}"; do
+    identifier=$(echo "$key" | cut -d':' -f1)
+    identifiers+=("$identifier")
+    echo "$identifier"
+  done
 
-  # 根据用户输入设置输出路径
-  if [ -z "$choice" ]; then
-    output_key_path="$HOME/.ssh/id_ed25519_mace"
-  else
-    output_key_path="./id_ed25519_mace"
+  # Let user select an identifier
+  local key_id
+  echo "请选择一个标识符："
+  select key_id in "${identifiers[@]}"; do
+    if [ -n "$key_id" ]; then
+      break
+    else
+      echo "无效选择，请重试。"
+    fi
+  done
+
+  # Set output_key_path based on the selected key_id
+  output_key_path="$HOME/.ssh/id_ed25519_$key_id"
+
+  # Extract the encrypted string by matching the identifier
+  local encrypted_key=""
+  for part in "${keys[@]}"; do
+    IFS=':' read -ra sub_parts <<< "$part"
+    if [ "${sub_parts[0]}" == "$key_id" ]; then
+      encrypted_key="${sub_parts[1]}"
+      break
+    fi
+  done
+
+  if [ -z "$encrypted_key" ]; then
+    echo "未找到加密密钥，请检查标识符。"
+    return 1
   fi
 
-  echo "私钥将输出到: $output_key_path"
-
-  # 从 ENCRYPTED_SSH_KEY 变量中读取加密字符串
-  local encrypted_key="$ENCRYPTED_SSH_KEY"
-
-  # 将加密字符串写入临时文件
   echo "$encrypted_key" | base64 --decode > /tmp/encrypted_key.tmp
 
-  # 提示用户输入用于解密的密码
+  if [ ! -s /tmp/encrypted_key.tmp ]; then
+    echo "临时文件创建失败，请检查加密过程。"
+    return 1
+  fi
+
   echo "请输入用于解密的密码:"
   read -s password
 
-  # 使用 openssl 解密私钥到临时文件
   temp_output_path="/tmp/temp_decrypted_key"
   if ! openssl enc -d -aes-256-cbc -in /tmp/encrypted_key.tmp -out "$temp_output_path" -pass pass:"$password" -pbkdf2; then
     echo "解密失败，请检查密码并重试。"
     rm /tmp/encrypted_key.tmp
-    rm -f "$temp_output_path"  # 删除临时解密文件
+    rm -f "$temp_output_path"  
     return 1
   fi
 
-  # 如果解密成功，将临时文件移动到目标路径
   mv "$temp_output_path" "$output_key_path"
 
-  # 删除临时文件
   rm /tmp/encrypted_key.tmp
 
-  # 如果解密成功，则设置权限
   chmod 600 "$output_key_path"
 
-  # 如果用户选择将密钥存入 ~/.ssh，则更新 SSH 配置文件
-  if [ "$choice" = "" ]; then
-    config_file="$HOME/.ssh/config"
-    if ! grep -q "IdentityFile $output_key_path" "$config_file"; then
-      echo -e "\nHost github.com\n  IdentityFile $output_key_path" >> "$config_file"
-      echo "SSH 配置文件已更新。"
-    else
-      echo "SSH 配置文件已包含该密钥配置。"
-    fi
+  echo "密钥成功写入到: $output_key_path"
+
+  config_file="$HOME/.ssh/config"
+  if ! grep -q "IdentityFile $output_key_path" "$config_file"; then
+    echo -e "\nHost github.com\n  IdentityFile $output_key_path" >> "$config_file"
+    echo "SSH 配置文件已更新。"
+  else
+    echo "SSH 配置文件已包含该密钥配置。"
   fi
 
 }
