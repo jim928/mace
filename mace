@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.153"
+version="0.1.154"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -477,6 +477,33 @@ openWithAndroidStudio() {
   open -a "Android Studio" .
 }
 
+# 函数：添加 SSH 密钥到 SSH 配置
+add_ssh_key_to_config() {
+  local key_path="$1"
+  local host="$2"
+  local config_file="$HOME/.ssh/config"
+
+  # 检查 SSH 配置文件是否存在，不存在则创建
+  if [ ! -f "$config_file" ]; then
+    echo "SSH 配置文件不存在，正在创建..."
+    touch "$config_file"
+    if [ $? -eq 0 ]; then
+      echo "SSH 配置文件已成功创建。"
+      chmod 600 "$config_file"
+    else
+      echo "创建 SSH 配置文件失败。"
+      return
+    fi
+  else
+    echo "SSH 配置文件已存在。"
+  fi
+
+  # 添加密钥配置到 SSH 配置文件
+  echo "Host $host" >> "$config_file"
+  echo "  IdentityFile $key_path" >> "$config_file"
+  echo "已将 $key_path 添加到 $host 的 SSH 配置。"
+}
+
 configGithub() {
   # 函数：检查并设置 Git 全局配置
   check_and_set_git_config() {
@@ -525,8 +552,11 @@ configGithub() {
       ssh-add "$key_path"
       echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
 
+      # 调试输出 key_suffix
+      echo "调试：SSH 密钥文件名后缀为 '$key_suffix'"
+
       # 调用函数添加新生成的 SSH 密钥到配置
-      add_ssh_key_to_config "$key_path"
+      add_ssh_key_to_config "$key_path" "github.com"
 
       # 复制 SSH 公钥到剪贴板
       pbcopy < "$key_path.pub"
@@ -552,8 +582,11 @@ configGithub() {
         ssh-add "$key_path"
         echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
 
+        # 调试输出 key_suffix
+        echo "调试：SSH 密钥文件名后缀为 '$key_suffix'"
+
         # 调用函数添加新生成的 SSH 密钥到配置
-        add_ssh_key_to_config "$key_path"
+        add_ssh_key_to_config "$key_path" "github.com"
 
         # 复制 SSH 公钥到剪贴板
         pbcopy < "$key_path.pub"
@@ -575,7 +608,7 @@ configGithub() {
 
     # 在尝试 SSH 连接之前，确保添加 SSH 密钥到配置
     if [ -n "$key_path" ]; then
-      add_ssh_key_to_config "$key_path"
+      add_ssh_key_to_config "$key_path" "github.com"
     fi
 
     # 执行 GitHub CLI 登录
@@ -595,31 +628,6 @@ configGithub() {
   fi
 
   # 在此处继续实现其他步骤
-  # 函数：添加 SSH 密钥到 SSH 配置
-  add_ssh_key_to_config() {
-    local key_path="$1"
-    local config_file="$HOME/.ssh/config"
-
-    # 检查 SSH 配置文件是否存在，不存在则创建
-    if [ ! -f "$config_file" ]; then
-      echo "SSH 配置文件不存在，正在创建..."
-      touch "$config_file"
-      if [ $? -eq 0 ]; then
-        echo "SSH 配置文件已成功创建。"
-        chmod 600 "$config_file"
-      else
-        echo "创建 SSH 配置文件失败。"
-        return
-      fi
-    else
-      echo "SSH 配置文件已存在。"
-    fi
-
-    # 添加密钥配置到 SSH 配置文件
-    echo "Host github.com" >> "$config_file"
-    echo "  IdentityFile $key_path" >> "$config_file"
-    echo "已将 $key_path 添加到 SSH 配置。"
-  }
 }
 
 options=(
