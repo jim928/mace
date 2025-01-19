@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.152"
+version="0.1.153"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -602,8 +602,17 @@ configGithub() {
 
     # 检查 SSH 配置文件是否存在，不存在则创建
     if [ ! -f "$config_file" ]; then
+      echo "SSH 配置文件不存在，正在创建..."
       touch "$config_file"
-      chmod 600 "$config_file"
+      if [ $? -eq 0 ]; then
+        echo "SSH 配置文件已成功创建。"
+        chmod 600 "$config_file"
+      else
+        echo "创建 SSH 配置文件失败。"
+        return
+      fi
+    else
+      echo "SSH 配置文件已存在。"
     fi
 
     # 添加密钥配置到 SSH 配置文件
