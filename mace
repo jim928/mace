@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-version="0.1.158"
+version="0.1.159"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
 maceWorkDir="$HOME/.mace"
 maceGitUrl="git@github.com:jim928/mace.git"
 homebrew_mace_url="git@github.com:jim928/homebrew-mace.git"
+
+# 全局变量存储加密后的密钥字符串
+ENCRYPTED_SSH_KEY="U2FsdGVkX19X0XQ1q4QZgLvReqQkrZuIqb8kqiUdL3wMnyIFd3kmJ3ems3Bxt3zyP8RSU1Y48qEIL7xTmdzN4inaM1LXD/vDA/hoLoBoxLhnIpNFF4hy0Y9IwMv48VtMfbotB4ZQ+FO+sZRFQEV+Se4OuM0e2+guWMWLB6swG1oSCMZU6znWhUhqdEctwoLI0KHDWx8r7tEgJIRxuo+diMfefzM440wNd5h3wUUKcO0RNv9XWYR9y6QftFgpQ7thhkTi/L3Yv/dKbD+XS79axu34sWpFpvg3Ur1+73klLqTgYSrVwQNUw8lNJrWkt/siVp80p7q+7jQCY51K6T291JO8gI03QEVBDeVCRGOlHQ33J2qlVHocaYGhWPXTc2klYvPD0VZsfJ72pMSstt9VAtQJLebjEQUAZplFoifxF0kgFdmUjZcYe6L/XCaY6ywV0SfAvAXprdMhCiIJGyT1dusow3F8VSq+AfdpBLXxRuD/N5K6HLTx85duAJVpt6IBfMdaq4H+oAUvfbbSClINq/nJjkbjQajeltdo9LN0460="
 
 usage() {
   # 打印可用的方法列表
@@ -629,7 +632,92 @@ configGithub() {
     echo "SSH 连接成功！"
   fi
 
-  # 在此处继续实现其他步骤
+}
+
+encrypSSH() {
+  local ssh_dir="$HOME/.ssh"
+  local key_files=($(ls $ssh_dir/id_* | grep -v ".pub" 2>/dev/null))
+
+  if [ ${#key_files[@]} -eq 0 ]; then
+    echo "错误：未找到任何 SSH 密钥文件。"
+    return 1
+  fi
+
+  # 列出可用的密钥文件供用户选择
+  echo "请选择一个 SSH 密钥文件："
+  select private_key_path in "${key_files[@]}"; do
+    if [ -n "$private_key_path" ]; then
+      break
+    else
+      echo "无效选择，请重试。"
+    fi
+  done
+
+  # 提示用户输入用于加密的密码
+  echo "请输入用于加密的密码:"
+  read -s password
+
+  # 使用本地变量存储加密后的密钥字符串
+  local encrypted_key
+  encrypted_key=$(openssl enc -aes-256-cbc -salt -in "$private_key_path" -base64 -pass pass:"$password" -pbkdf2)
+  echo "私钥已加密并存储到变量中。"
+
+  # 将加密后的密钥字符串转换为单行格式
+  local single_line_key=$(echo "$encrypted_key" | tr -d '\n')
+
+  # 将单行格式的密钥字符串写入脚本文件中的 ENCRYPTED_SSH_KEY 变量
+  sed -i '' "s|^ENCRYPTED_SSH_KEY=.*|ENCRYPTED_SSH_KEY=\"$single_line_key\"|" "$0"
+
+}
+
+restoreSSH() {
+  local password
+
+  # 提示用户选择输出路径
+  echo "是否将私钥输出到 ~/.ssh 目录？(回车/任意其他输入)"
+
+  # 根据用户输入设置输出路径
+  if [ -z "$choice" ]; then
+    output_key_path="$HOME/.ssh/id_ed25519_mace"
+  else
+    output_key_path="./id_ed25519_mace"
+  fi
+
+  echo "私钥将输出到: $output_key_path"
+
+  # 从 ENCRYPTED_SSH_KEY 变量中读取加密字符串
+  local encrypted_key="$ENCRYPTED_SSH_KEY"
+
+  # 将加密字符串写入临时文件
+  echo "$encrypted_key" | base64 --decode > /tmp/encrypted_key.tmp
+
+  # 提示用户输入用于解密的密码
+  echo "请输入用于解密的密码:"
+  read -s password
+
+  # 使用 openssl 解密私钥
+  if ! openssl enc -d -aes-256-cbc -in /tmp/encrypted_key.tmp -out "$output_key_path" -pass pass:"$password" -pbkdf2; then
+    echo "解密失败，请检查密码并重试。"
+    rm /tmp/encrypted_key.tmp
+    return 1
+  fi
+
+  # 删除临时文件
+  rm /tmp/encrypted_key.tmp
+
+  # 设置权限
+  chmod 600 "$output_key_path"
+
+  # 如果用户选择将密钥存入 ~/.ssh，则更新 SSH 配置文件
+  if [ "$choice" = "" ]; then
+    config_file="$HOME/.ssh/config"
+    if ! grep -q "IdentityFile $output_key_path" "$config_file"; then
+      echo -e "\nHost github.com\n  IdentityFile $output_key_path" >> "$config_file"
+      echo "SSH 配置文件已更新。"
+    else
+      echo "SSH 配置文件已包含该密钥配置。"
+    fi
+  fi
 }
 
 options=(
@@ -641,6 +729,8 @@ options=(
   "importsettings:importSettings"
   "uploadsettings:uploadSettings"
   "github:configGithub"
+  "encrypssh:encrypSSH"
+  "restoressh:restoreSSH"
 )
 
 # 定义功能和对应的函数
