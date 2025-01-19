@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.160"
+version="0.1.161"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -9,7 +9,7 @@ maceGitUrl="git@github.com:jim928/mace.git"
 homebrew_mace_url="git@github.com:jim928/homebrew-mace.git"
 
 # 全局变量存储加密后的密钥字符串
-ENCRYPTED_SSH_KEY="U2FsdGVkX19X0XQ1q4QZgLvReqQkrZuIqb8kqiUdL3wMnyIFd3kmJ3ems3Bxt3zyP8RSU1Y48qEIL7xTmdzN4inaM1LXD/vDA/hoLoBoxLhnIpNFF4hy0Y9IwMv48VtMfbotB4ZQ+FO+sZRFQEV+Se4OuM0e2+guWMWLB6swG1oSCMZU6znWhUhqdEctwoLI0KHDWx8r7tEgJIRxuo+diMfefzM440wNd5h3wUUKcO0RNv9XWYR9y6QftFgpQ7thhkTi/L3Yv/dKbD+XS79axu34sWpFpvg3Ur1+73klLqTgYSrVwQNUw8lNJrWkt/siVp80p7q+7jQCY51K6T291JO8gI03QEVBDeVCRGOlHQ33J2qlVHocaYGhWPXTc2klYvPD0VZsfJ72pMSstt9VAtQJLebjEQUAZplFoifxF0kgFdmUjZcYe6L/XCaY6ywV0SfAvAXprdMhCiIJGyT1dusow3F8VSq+AfdpBLXxRuD/N5K6HLTx85duAJVpt6IBfMdaq4H+oAUvfbbSClINq/nJjkbjQajeltdo9LN0460="
+ENCRYPTED_SSH_KEY="U2FsdGVkX18KfhNSO8JK2J71oRSuo3gSP78SxzJ+sxjgR98gSrlnIFegIMnZHanZQVzmINCpw7MS41OpDwfv/IAAIfApVXW9WmAVDX+3VoJkRDjdpoi+lL/P77E+pDIJhgUw/kbTFJ2C3MIOW4pi9PsoPkpN2L/XlmLrVABQKnz+bOQBOCzvzh6SxqesPl1pB7V5x1NGLDvDyyt2Ta7kXPZLe1cHyDj11Sx6I1f2GjNqZZlf+oU6MoeTtvknVJBcuwVweqGpRtO9yQKiRcBlRq0C8Dfeid9gahO7xMWBrV9vaDI58rD2aggXFuc3CGBWMyjXWu81+QPRewIlSxvtbFzs/2rN38i+2pYxicoIlmlyHcJffAXWERxonH+rA2oLpCqRPwkyp9jZwlIAXL0odkGF6c8R+pq1PnyUqzFBKsOEz2bX6AcTNs0Nr+LISM+hDkfdoV/xlkQGqNJU7ARmBYJfiKr7+cBy5j8LYzWuDLfFh0GBf8fESaM2HlLuy4OL8E5/SE+nYuUeo922u8nTE22flhuv3nfTCVlS4zPVlng="
 
 usage() {
   # 打印可用的方法列表
@@ -700,17 +700,22 @@ restoreSSH() {
   echo "请输入用于解密的密码:"
   read -s password
 
-  # 使用 openssl 解密私钥
-  if ! openssl enc -d -aes-256-cbc -in /tmp/encrypted_key.tmp -out "$output_key_path" -pass pass:"$password" -pbkdf2; then
+  # 使用 openssl 解密私钥到临时文件
+  temp_output_path="/tmp/temp_decrypted_key"
+  if ! openssl enc -d -aes-256-cbc -in /tmp/encrypted_key.tmp -out "$temp_output_path" -pass pass:"$password" -pbkdf2; then
     echo "解密失败，请检查密码并重试。"
     rm /tmp/encrypted_key.tmp
+    rm -f "$temp_output_path"  # 删除临时解密文件
     return 1
   fi
+
+  # 如果解密成功，将临时文件移动到目标路径
+  mv "$temp_output_path" "$output_key_path"
 
   # 删除临时文件
   rm /tmp/encrypted_key.tmp
 
-  # 设置权限
+  # 如果解密成功，则设置权限
   chmod 600 "$output_key_path"
 
   # 如果用户选择将密钥存入 ~/.ssh，则更新 SSH 配置文件
@@ -723,6 +728,7 @@ restoreSSH() {
       echo "SSH 配置文件已包含该密钥配置。"
     fi
   fi
+
 }
 
 options=(
