@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.156"
+version="0.1.157"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -374,9 +374,9 @@ uploadSettings() {
   local repo_dir="$HOME/.mace/dev_settings"
   echo "Syncing settings from JetBrains IDEs to $repo_dir..."
   
-  # Set remote URL to HTTPS for pushing
+  # Set remote URL to SSH format for pushing
   cd "$repo_dir"
-  git remote set-url origin https://github.com/Griffinsin/dev_settings.git
+  git remote set-url origin git@github.com:Griffinsin/dev_settings.git
 
   # 添加调试日志以检查 SSH 配置和 Git 推送操作
   echo "当前 SSH 配置："
@@ -387,6 +387,7 @@ uploadSettings() {
 
   # Iterate over JetBrains IDEs
   for app in "${jetbrains_apps[@]}"; do
+    # Use a wildcard to match versioned directories in JetBrains folder
     for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
       if [ -d "$config_dir" ]; then
         for sub_dir in keymaps templates; do
