@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.162"
+version="0.1.163"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -692,6 +692,9 @@ configGithub() {
 
 }
 
+# encrypSSH 函数用于加密 SSH 私钥文件，并将其存储在脚本中。
+# 用户可以选择一个现有的 SSH 私钥，并为其设置一个标识符和加密密码。
+# 加密后的密钥以单行形式存储，确保安全性。
 encrypSSH() {
   local ssh_dir="$HOME/.ssh"
   local key_files=($(ls $ssh_dir/id_* | grep -v ".pub" 2>/dev/null))
@@ -739,6 +742,9 @@ encrypSSH() {
   chmod +x "$0"
 }
 
+# restoreSSH 函数用于恢复加密的 SSH 密钥。
+# 用户可以选择一个标识符，输入解密密码，恢复并配置 SSH 密钥。
+# 恢复后的密钥被写入到用户的 .ssh 目录，并更新 SSH 配置文件。
 restoreSSH() {
   local password
 
