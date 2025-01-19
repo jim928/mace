@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.143"
+version="0.1.144"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -303,11 +303,11 @@ configMaceDevTable() {
 importSettings() {
   # Clone the dev_settings repository into the ~/.mace/dev_settings directory if it doesn't exist
   if [ ! -d "$HOME/.mace/dev_settings" ]; then
-    echo "Cloning repository from git@github.com:Griffinsin/dev_settings.git into ~/.mace/dev_settings..."
-    if git clone "git@github.com:Griffinsin/dev_settings.git" "$HOME/.mace/dev_settings"; then
+    echo "Cloning repository from https://github.com/Griffinsin/dev_settings.git into ~/.mace/dev_settings..."
+    if git clone "https://github.com/Griffinsin/dev_settings.git" "$HOME/.mace/dev_settings"; then
       echo "Repository cloned successfully into ~/.mace/dev_settings."
     else
-      echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your SSH permissions.${NC}"
+      echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your network connection.${NC}"
     fi
   else
     echo "Directory ~/.mace/dev_settings already exists. Attempting to update the repository..."
