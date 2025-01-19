@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.159"
+version="0.1.160"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -537,6 +537,7 @@ configGithub() {
 
   # 尝试 SSH 连接
   echo "尝试 SSH 连接到 GitHub..."
+  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts"
   ssh -T git@github.com
   if [ $? -ne 1 ]; then
     echo "SSH 连接失败，检查 SSH 密钥..."
@@ -673,8 +674,12 @@ encrypSSH() {
 restoreSSH() {
   local password
 
+  # 预先将 GitHub 的主机密钥添加到 known_hosts 文件中
+  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts"
+
   # 提示用户选择输出路径
   echo "是否将私钥输出到 ~/.ssh 目录？(回车/任意其他输入)"
+  read -r choice
 
   # 根据用户输入设置输出路径
   if [ -z "$choice" ]; then
