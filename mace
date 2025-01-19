@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.155"
+version="0.1.156"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -378,6 +378,13 @@ uploadSettings() {
   cd "$repo_dir"
   git remote set-url origin https://github.com/Griffinsin/dev_settings.git
 
+  # 添加调试日志以检查 SSH 配置和 Git 推送操作
+  echo "当前 SSH 配置："
+  cat ~/.ssh/config
+
+  echo "当前 Git 全局用户名: $(git config --global user.name)"
+  echo "当前 Git 全局邮箱: $(git config --global user.email)"
+
   # Iterate over JetBrains IDEs
   for app in "${jetbrains_apps[@]}"; do
     for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
@@ -394,7 +401,15 @@ uploadSettings() {
             if [ -n "$(git status --porcelain)" ]; then
               git add .
               git commit -m "Update $sub_dir from $app"
-              git push origin main
+              # 在执行 Git 推送操作时添加日志
+              echo "执行 Git 推送操作..."
+              git push origin main 2>&1 | tee /tmp/git_push_output.log
+              echo "Git 推送操作完成。"
+
+              # 查看 Git 推送操作的输出
+              if grep -q "Username for 'https://github.com'" /tmp/git_push_output.log; then
+                echo "提示输入 GitHub 用户名，请检查 SSH 配置和凭据。"
+              fi
               print_color "$GREEN" "Changes in $sub_dir from $app uploaded successfully."
               return 0  # Exit the function after a successful commit
             else
@@ -426,7 +441,15 @@ uploadSettings() {
           if [ -n "$(git status --porcelain)" ]; then
             git add .
             git commit -m "Update $sub_dir from Android Studio"
-            git push origin main
+            # 在执行 Git 推送操作时添加日志
+            echo "执行 Git 推送操作..."
+            git push origin main 2>&1 | tee /tmp/git_push_output.log
+            echo "Git 推送操作完成。"
+
+            # 查看 Git 推送操作的输出
+            if grep -q "Username for 'https://github.com'" /tmp/git_push_output.log; then
+              echo "提示输入 GitHub 用户名，请检查 SSH 配置和凭据。"
+            fi
             print_color "$GREEN" "Changes in $sub_dir from Android Studio uploaded successfully."
             return 0  # Exit the function after a successful commit
           else
@@ -443,7 +466,7 @@ uploadSettings() {
 
   # Handle Xcode CodeSnippets
   local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
-  if [ -d "$xcode_snippets_dir" ]; then
+  if [ -d "$HOME/.mace/dev_settings/CodeSnippets" ]; then
     echo "Syncing Xcode CodeSnippets to $repo_dir..."
     rm -rf "$repo_dir/CodeSnippets"  # Clear the destination directory
     mkdir -p "$repo_dir/CodeSnippets"
@@ -454,14 +477,22 @@ uploadSettings() {
     git add -A  # Ensure all files in CodeSnippets are tracked
     if [ -n "$(git status --porcelain)" ]; then
       git commit -m "Update CodeSnippets from Xcode"
-      git push origin main
+      # 在执行 Git 推送操作时添加日志
+      echo "执行 Git 推送操作..."
+      git push origin main 2>&1 | tee /tmp/git_push_output.log
+      echo "Git 推送操作完成。"
+
+      # 查看 Git 推送操作的输出
+      if grep -q "Username for 'https://github.com'" /tmp/git_push_output.log; then
+        echo "提示输入 GitHub 用户名，请检查 SSH 配置和凭据。"
+      fi
       print_color "$GREEN" "Xcode CodeSnippets uploaded successfully."
       return 0  # Exit the function after a successful commit
     else
       print_color "$GREEN" "No changes to commit for Xcode CodeSnippets."
     fi
   else
-    echo "Xcode CodeSnippets directory not found."
+    echo "CodeSnippets directory not found in dev_settings."
   fi
 
   print_color "$GREEN" "No changes detected for any JetBrains IDEs."
