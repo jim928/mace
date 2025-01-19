@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.154"
+version="0.1.155"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -498,6 +498,12 @@ add_ssh_key_to_config() {
     echo "SSH 配置文件已存在。"
   fi
 
+  # 检查是否已存在相同的配置
+  if grep -q "Host $host" "$config_file" && grep -q "IdentityFile $key_path" "$config_file"; then
+    echo "$host 的 SSH 配置已存在，跳过添加。"
+    return
+  fi
+
   # 添加密钥配置到 SSH 配置文件
   echo "Host $host" >> "$config_file"
   echo "  IdentityFile $key_path" >> "$config_file"
@@ -604,11 +610,6 @@ configGithub() {
         echo "Homebrew 未安装，请手动安装 GitHub CLI。"
         return
       fi
-    fi
-
-    # 在尝试 SSH 连接之前，确保添加 SSH 密钥到配置
-    if [ -n "$key_path" ]; then
-      add_ssh_key_to_config "$key_path" "github.com"
     fi
 
     # 执行 GitHub CLI 登录
