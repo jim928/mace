@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.144"
+version="0.1.145"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -312,6 +312,8 @@ importSettings() {
   else
     echo "Directory ~/.mace/dev_settings already exists. Attempting to update the repository..."
     cd "$HOME/.mace/dev_settings"
+    # Ensure the remote URL is set to HTTPS
+    git remote set-url origin https://github.com/Griffinsin/dev_settings.git
     if git pull; then
       echo "Repository updated successfully."
     else
@@ -370,6 +372,10 @@ uploadSettings() {
   local repo_dir="$HOME/.mace/dev_settings"
   echo "Syncing settings from JetBrains IDEs to $repo_dir..."
   
+  # Set remote URL to HTTPS for pushing
+  cd "$repo_dir"
+  git remote set-url origin https://github.com/Griffinsin/dev_settings.git
+
   # Iterate over JetBrains IDEs
   for app in "${jetbrains_apps[@]}"; do
     for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
