@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.167"
+version="0.1.168"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -69,7 +69,7 @@ inject_key_to_script() {
 
 usage() {
 	# 打印可用的方法列表
-	for func in "${functions[@]}"; do
+	for func in "${options[@]}"; do
 		name="${func%%:*}"
 		method="${func##*:}"
 		echo "$name ---------- $method"
@@ -1016,9 +1016,6 @@ options=(
 )
 
 # 定义功能和对应的函数
-functions=(
-
-)
 
 while (($# > 0)); do
 	# 如果参数以 .rar 结尾，直接调用 rar() 方法
@@ -1033,7 +1030,7 @@ while (($# > 0)); do
 	fi
 
 	# 遍历选项和功能数组
-	for entry in "${options[@]}" "${functions[@]}"; do
+	for entry in "${options[@]}"; do
 		param="${entry%%:*}"
 		func="${entry#*:}"
 
