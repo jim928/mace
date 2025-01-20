@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.163"
+version="0.1.164"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -836,6 +836,8 @@ options=(
   "github:configGithub"
   "encrypssh:encrypSSH"
   "restoressh:restoreSSH"
+  "publish:publishNewVersion"
+  "upgrade:upgradeFunc"
 )
 
 # 定义功能和对应的函数
@@ -844,8 +846,6 @@ functions=(
   "opengoogle:openGoogleFolder"
   "openuserdata:openUserDataFolder"
   "openjetbrain:openJetBrainFolder"
-  "publish:publishNewVersion"
-  "upgrade:upgradeFunc"
   "deletelock:deleteAllLockFiles"
   "color:showColors"
   "githelp:gitHelp"
