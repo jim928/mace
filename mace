@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.166"
+version="0.1.167"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -155,7 +155,116 @@ getSSHKey() {
 		makessh
 	fi
 }
+makessh() {
+	read -p "Enter the key name suffix (the full key name will be id_ed25519_[your_input]): " key_suffix
+	key_name="id_ed25519_$key_suffix"
+	key_path="$HOME/.ssh/$key_name"
 
+	# Generate the SSH key
+	read -p "Enter your email associated with your GitHub account: " email
+	ssh-keygen -t ed25519 -C "$email" -f "$key_path"
+
+	# Start the ssh-agent in the background
+	eval "$(ssh-agent -s)"
+
+	# Add the SSH key to the ssh-agent
+	ssh-add "$key_path"
+
+	# Copy the SSH key to the clipboard
+	pbcopy <"$key_path.pub"
+
+	echo "The SSH key has been generated and added to the ssh-agent. The public key has been copied to the clipboard."
+}
+setssh() {
+	# 检查当前目录是否是Git仓库
+	if git rev-parse --git-dir >/dev/null 2>&1; then
+		echo "当前目录是一个Git仓库。"
+
+		# 列出~/.ssh目录下所有的私钥文件
+		echo "可用的SSH密钥文件："
+		key_files=$(find ~/.ssh -type f ! -name "*.pub" ! -name "config" ! -name "known_hosts")
+		select key_path in $key_files; do
+			if [ -n "$key_path" ]; then
+				# 设置选定的SSH密钥
+				git config core.sshCommand "ssh -i $key_path -F /dev/null"
+				echo "git config core.sshCommand \"ssh -i $key_path -F /dev/null\""
+				echo "已设置SSH密钥：$key_path"
+				break
+			else
+				echo "无效选择。"
+			fi
+		done
+	else
+		echo "当前目录不是一个Git仓库。"
+	fi
+}
+gitGlobal() {
+	echo "# 查看所有全局配置"
+	echo "git config --global --list"
+	echo "# 设置全局用户名"
+	echo 'git config --global user.name "Alice"'
+	echo "# 设置全局邮箱"
+	echo 'git config --global user.email "alice@example.com"'
+}
+pubCleanGet() {
+	if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+		flutter clean
+		deleteAllLockFiles
+		flutter pub get
+	else
+		echo "当前目录不是一个Git仓库，操作未执行。"
+	fi
+}
+setLunchKey() {
+	echo "当电脑的功能键里没有启动台按钮时，设置启动台的快捷键"
+	echo "系统设置--键盘--键盘快捷键--启动台与程序坞--显示启动台"
+}
+installadb() {
+	echo "安装adb"
+	echo "brew install --cask android-platform-tools"
+	brew install --cask android-platform-tools
+}
+find_func() {
+	search_term="$2"
+
+	if [ -z "$search_term" ]; then
+		echo "Usage: find <search_term>"
+		exit 1
+	fi
+
+	echo "如果要查找所有子目录 find .  -name \"*$search_term*\" "
+	echo "如果仅查找当前目录 find .  -name *$search_term* "
+	# 使用 find 命令来查找当前目录下所有文件名包含指定字符串的文件
+	find . -name "*$search_term*"
+}
+reduceImage() {
+	echo "安装imagemagick说明"
+	echo "brew install imagemagick"
+	echo "magick input.jpg -quality 85 output.jpg"
+	echo "magick input.png -resize 50% output.png"
+}
+cleanmac() {
+	# Check if mac-cleanup is already installed
+	if ! command -v mac-cleanup &>/dev/null; then
+		# Tap the repository
+		brew tap fwartner/tap
+
+		# Install mac-cleanup
+		brew install fwartner/tap/mac-cleanup
+	fi
+
+	# Run mac-cleanup
+	mac-cleanup
+}
+resetpwd() {
+	echo "重启mac并同时按下Command+R，进入恢复模式。"
+	echo "进入「菜单栏-实用程序-终端」，输入命令
+  「resetpassword」回车运行，调出密码重置工具。选择包含密码的启动磁盘卷宗、需重设密码的用户账户；输入并确认新的用户密码，点击「重设」。"
+	echo "重启完成后，使用新密码登录即可。"
+}
+screenchange() {
+	echo "mac屏幕坏了扩展屏切换快捷键 command和亮度减，按下2秒后就站起来了，很快屏幕直接变成了主屏镜像。"
+}
 #################### test func ####################
 testFunc() {
 	echo "testFunc"
@@ -163,136 +272,136 @@ testFunc() {
 
 #################### publish new version of mace ####################
 publishNewVersion() {
-    # Check if shfmt is installed, and install it if not
-    if ! command -v shfmt &> /dev/null; then
-        echo "shfmt not found, installing..."
-        brew install shfmt
-    fi
+	# Check if shfmt is installed, and install it if not
+	if ! command -v shfmt &>/dev/null; then
+		echo "shfmt not found, installing..."
+		brew install shfmt
+	fi
 
-    # Format the mace file
-    shfmt -w -s mace
+	# Format the mace file
+	shfmt -w -s mace
 
-    cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
+	cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
 
-    # 删除所有本地标签
-    git tag -l | xargs git tag -d >/dev/null 2>&1
+	# 删除所有本地标签
+	git tag -l | xargs git tag -d >/dev/null 2>&1
 
-    # 拉取最新标签
-    git fetch --tags >/dev/null 2>&1
-    git pull
+	# 拉取最新标签
+	git fetch --tags >/dev/null 2>&1
+	git pull
 
-    # 修改版本号
-    # 获取当前文件夹下 mace 文件的版本号
-    current_version=$(grep 'version=' mace | sed -n 's/version="\([^"]*\)".*/\1/p' | head -n 1)
+	# 修改版本号
+	# 获取当前文件夹下 mace 文件的版本号
+	current_version=$(grep 'version=' mace | sed -n 's/version="\([^"]*\)".*/\1/p' | head -n 1)
 
-    # 递增版本号
-    new_version=$(awk -F. -v OFS=. '{print $1,$2,$3+1}' <<<"$current_version")
+	# 递增版本号
+	new_version=$(awk -F. -v OFS=. '{print $1,$2,$3+1}' <<<"$current_version")
 
-    # 使用 sed 命令替换文件中的 version 变量
-    sed -i '' "s/version=\"$current_version\"/version=\"$new_version\"/" mace
+	# 使用 sed 命令替换文件中的 version 变量
+	sed -i '' "s/version=\"$current_version\"/version=\"$new_version\"/" mace
 
-    # 输出新版本号``
-    echo "Old Version: $current_version"
-    echo "New Version: $new_version"
+	# 输出新版本号``
+	echo "Old Version: $current_version"
+	echo "New Version: $new_version"
 
-    # 获取当前日期
-    current_date=$(date +"%Y-%m-%d")
-    git add .
-    git commit -m "publishMac commit from mace - ${current_date}." -a
-    #  git push "${maceGitUrl}" HEAD:master
+	# 获取当前日期
+	current_date=$(date +"%Y-%m-%d")
+	git add .
+	git commit -m "publishMac commit from mace - ${current_date}." -a
+	#  git push "${maceGitUrl}" HEAD:master
 
-    # 创建新 tag
-    git tag -a "$new_version" -m "$new_version"
+	# 创建新 tag
+	git tag -a "$new_version" -m "$new_version"
 
-    # 推送所有分支和标签
-    git push "${maceGitUrl}" HEAD:master
-    echo "push mace changes to $maceGitUrl done"
-    git push --tags "${maceGitUrl}"
-    echo "push mace tags to $maceGitUrl done"
+	# 推送所有分支和标签
+	git push "${maceGitUrl}" HEAD:master
+	echo "push mace changes to $maceGitUrl done"
+	git push --tags "${maceGitUrl}"
+	echo "push mace tags to $maceGitUrl done"
 
-    ########## release new version to github ########
-    # Replace with your GitHub username and repository name
-    USERNAME="jim928"
-    REPO="mace"
+	########## release new version to github ########
+	# Replace with your GitHub username and repository name
+	USERNAME="jim928"
+	REPO="mace"
 
-    # Replace with the tag name you want to create a release from
-    TAG="$new_version"
+	# Replace with the tag name you want to create a release from
+	TAG="$new_version"
 
-    RELEASE_NOTES="Release notes for version $TAG"
+	RELEASE_NOTES="Release notes for version $TAG"
 
-    echo "Creating GitHub release..."
-    response=$(curl -s -X POST \
-        -H "Accept: application/vnd.github.v3+json" \
-        -H "Content-Type: application/json" \
-        "https://api.github.com/repos/$USERNAME/$REPO/releases" \
-        -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
+	echo "Creating GitHub release..."
+	response=$(curl -s -X POST \
+		-H "Accept: application/vnd.github.v3+json" \
+		-H "Content-Type: application/json" \
+		"https://api.github.com/repos/$USERNAME/$REPO/releases" \
+		-d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
 
-    # Print the response from GitHub API
-    echo "$response"
+	# Print the response from GitHub API
+	echo "$response"
 
-    # Extract the release ID from the response
-    release_id=$(echo "$response" | jq -r '.id')
-    echo "Release ID: $release_id"
+	# Extract the release ID from the response
+	release_id=$(echo "$response" | jq -r '.id')
+	echo "Release ID: $release_id"
 
-    # 提取源代码（tar.gz）文件的下载链接
-    download_url="https://github.com/jim928/mace/archive/refs/tags/$new_version.tar.gz"
+	# 提取源代码（tar.gz）文件的下载链接
+	download_url="https://github.com/jim928/mace/archive/refs/tags/$new_version.tar.gz"
 
-    # 打印下载链接
-    echo "源代码下载链接: $download_url"
+	# 打印下载链接
+	echo "源代码下载链接: $download_url"
 
-    ######## 开始brew 发布 流程 ########
-    # Formula name
-    formula_name="mace"
+	######## 开始brew 发布 流程 ########
+	# Formula name
+	formula_name="mace"
 
-    # Source URL
-    source_url="$download_url"
+	# Source URL
+	source_url="$download_url"
 
-    ######## 生成 mace.rb 文件 ########
+	######## 生成 mace.rb 文件 ########
 
-    # Homebrew Core Formula directory
-    formula_directory="$HOME/.mace/homebrew-mace"
+	# Homebrew Core Formula directory
+	formula_directory="$HOME/.mace/homebrew-mace"
 
-    # if formula_directory not exist, clone it else update it
-    if [ ! -d "$formula_directory" ]; then
-        echo "homebrew-mace directory does not exist. Cloning..."
-        mkdir -p "$formula_directory"
-        git clone "${homebrew_mace_url}" "$formula_directory"
-    else
-        echo "homebrew-mace directory exists. Updating..."
-        cd "$formula_directory" || {
-            echo "cd to path failed: $formula_directory"
-            exit 1
-        }
-        git fetch && git pull
-    fi
+	# if formula_directory not exist, clone it else update it
+	if [ ! -d "$formula_directory" ]; then
+		echo "homebrew-mace directory does not exist. Cloning..."
+		mkdir -p "$formula_directory"
+		git clone "${homebrew_mace_url}" "$formula_directory"
+	else
+		echo "homebrew-mace directory exists. Updating..."
+		cd "$formula_directory" || {
+			echo "cd to path failed: $formula_directory"
+			exit 1
+		}
+		git fetch && git pull
+	fi
 
-    cd "$formula_directory" || {
-        echo "cd to path failed: $formula_directory"
-        exit 1
-    }
+	cd "$formula_directory" || {
+		echo "cd to path failed: $formula_directory"
+		exit 1
+	}
 
-    mace_formula_path="$formula_directory/$formula_name.rb"
+	mace_formula_path="$formula_directory/$formula_name.rb"
 
-    # Create mace.rb with SHA256 checksum
-    echo "class Mace < Formula" >"$mace_formula_path"
-    echo '  desc "Your description here"' >>"$mace_formula_path"
-    echo '  homepage "https://github.com/jim928/mace"' >>"$mace_formula_path"
-    echo "  url \"$source_url\"" >>"$mace_formula_path"
-    echo "  sha256 \"$(curl -Ls "$source_url" | shasum -a 256 | cut -d ' ' -f 1)\"" >>"$mace_formula_path"
-    echo "" >>"$mace_formula_path"
-    echo "  # ... 其他 Formula 配置信息 ..." >>"$mace_formula_path"
-    echo "" >>"$mace_formula_path"
-    echo "  def install" >>"$mace_formula_path"
-    echo "    bin.install 'mace'" >>"$mace_formula_path"
-    echo "  end" >>"$mace_formula_path"
-    echo "end" >>"$mace_formula_path"
+	# Create mace.rb with SHA256 checksum
+	echo "class Mace < Formula" >"$mace_formula_path"
+	echo '  desc "Your description here"' >>"$mace_formula_path"
+	echo '  homepage "https://github.com/jim928/mace"' >>"$mace_formula_path"
+	echo "  url \"$source_url\"" >>"$mace_formula_path"
+	echo "  sha256 \"$(curl -Ls "$source_url" | shasum -a 256 | cut -d ' ' -f 1)\"" >>"$mace_formula_path"
+	echo "" >>"$mace_formula_path"
+	echo "  # ... 其他 Formula 配置信息 ..." >>"$mace_formula_path"
+	echo "" >>"$mace_formula_path"
+	echo "  def install" >>"$mace_formula_path"
+	echo "    bin.install 'mace'" >>"$mace_formula_path"
+	echo "  end" >>"$mace_formula_path"
+	echo "end" >>"$mace_formula_path"
 
-    # Print the path to the created mace.rb file
-    echo "Formula file created at: $mace_formula_path"
+	# Print the path to the created mace.rb file
+	echo "Formula file created at: $mace_formula_path"
 
-    git add .
-    git commit -m "publish mace.rb $new_version commit from mace}." -a
-    git push "${homebrew_mace_url}" HEAD:master
+	git add .
+	git commit -m "publish mace.rb $new_version commit from mace}." -a
+	git push "${homebrew_mace_url}" HEAD:master
 }
 
 ################ upgrade mace version from brew ###############
@@ -314,7 +423,30 @@ showColors() {
 	colorList="100% — FF,99% — FC,98% — FA,97% — F7,96% — F5,95% — F2,94% — F0,93% — ED,92% — EB,91% — E8,90% — E6,89% — E3,88% — E0,87% — DE,86% — DB,85% — D9,84% — D6,83% — D4,82% — D1,81% — CF,80% — CC,79% — C9,78% — C7,77% — C4,76% — C2,75% — BF,74% — BD,73% — BA,72% — B8,71% — B5,70% — B3,69% — B0,68% — AD,67% — AB,66% — A8,65% — A6,64% — A3,63% — A1,62% — 9E,61% — 9C,60% — 99,59% — 96,58% — 94,57% — 91,56% — 8F,55% — 8C,54% — 8A,53% — 87,52% — 85,51% — 82,50% — 80,49% — 7D,48% — 7A,47% — 78,46% — 75,45% — 73,44% — 70,43% — 6E,42% — 6B,41% — 69,40% — 66,39% — 63,38% — 61,37% — 5E,36% — 5C,35% — 59,34% — 57,33% — 54,32% — 52,31% — 4F,30% — 4D,29% — 4A,28% — 47,27% — 45,26% — 42,25% — 40,24% — 3D,23% — 3B,22% — 38,21% — 36,20% — 33,19% — 30,18% — 2E,17% — 2B,16% — 29,15% — 26,14% — 24,13% — 21,12% — 1F,11% — 1C,10% — 1A,9% — 17,8% — 14,7% — 12,6% — 0F,5% — 0D,4% — 0A,3% — 08,2% — 05,1% — 03,0% — 00"
 	echo "$colorList" | tr ',' '\n'
 }
-
+gitCloneOther() {
+	echo "将仓库A的分支branch1代码合并到仓库B的分支branch2"
+	echo "git clone git@github.com:user/repoB.git"
+	echo "cd repoB"
+	echo "git remote add repoA git@github.com:user/repoA.git"
+	echo "git fetch repoA"
+	echo "git checkout branch2"
+	echo "git merge repoA/branch1"
+	echo "然后处理合并产生的冲突"
+}
+listAllPub() {
+	echo "列出所有.pub公钥文件，这些文件会添加到github或gitlab网站上"
+	echo "for file in ~/.ssh/*.pub; do echo \"$file\"; cat \"$file\"; echo; done"
+	for file in ~/.ssh/*.pub; do
+		echo "$file"
+		cat "$file"
+		echo
+	done
+}
+battlenet() {
+	echo "1,Delete the Battle Net folder in /Users/Shared/"
+	echo "2,Download the battle.net agent in /en-US/ region, I’m not allowed to post links here."
+	echo "3,Open Terminal on Mac and copy this code: open -a ~/Downloads/Battle.net-Setup.app --args --locale=enUS --region=US --session=, then tap Enter."
+}
 jetbrains_apps=("PyCharm" "GoLand" "IntelliJ IDEA" "IntelliJ IDEA CE" "WebStorm" "CLion" "PhpStorm" "RubyMine" "DataGrip")
 
 configMaceDevTable() {
@@ -859,20 +991,14 @@ options=(
 	"publish:publishNewVersion"
 	"upgrade:upgradeFunc"
 	"ipa:ipa"
-)
-
-# 定义功能和对应的函数
-functions=(
 	"deleterb:deleterb"
 	"opengoogle:openGoogleFolder"
 	"openuserdata:openUserDataFolder"
 	"openjetbrain:openJetBrainFolder"
 	"deletelock:deleteAllLockFiles"
 	"color:showColors"
-	"githelp:gitHelp"
 	"gitcloneother:gitCloneOther"
 	"listallpub:listAllPub"
-	"sshaddall:sshAddAll"
 	"battlenet:battlenet"
 	"howto:howToCreateMace"
 	"sshkey:getSSHKey"
@@ -887,7 +1013,11 @@ functions=(
 	"cleanmac:cleanmac"
 	"resetpwd:resetpwd"
 	"screenchange:screenchange"
-	"test:testFunc"
+)
+
+# 定义功能和对应的函数
+functions=(
+
 )
 
 while (($# > 0)); do
