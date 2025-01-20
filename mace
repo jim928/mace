@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.169"
+version="0.1.170"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -1019,8 +1019,6 @@ options=(
 	"resetpwd:resetpwd"
 	"screenchange:screenchange"
 )
-
-# 定义功能和对应的函数
 
 while (($# > 0)); do
 	# 如果参数以 .rar 结尾，直接调用 rar() 方法
