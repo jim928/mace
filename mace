@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.170"
+version="0.1.171"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -677,6 +677,10 @@ openWithAndroidStudio() {
 	open -a "Android Studio" .
 }
 
+pycharmOpen() {
+	open -a "PyCharm"
+}
+
 # 函数：添加 SSH 密钥到 SSH 配置
 add_ssh_key_to_config() {
 	local key_path="$1"
@@ -1018,6 +1022,7 @@ options=(
 	"cleanmac:cleanmac"
 	"resetpwd:resetpwd"
 	"screenchange:screenchange"
+	"pycharm:pycharmOpen"
 )
 
 while (($# > 0)); do
