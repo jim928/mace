@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.172"
+version="0.1.173"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -680,7 +680,6 @@ openWithAndroidStudio() {
 pycharmOpen() {
 	open -a "PyCharm" .
 }
-
 # 函数：添加 SSH 密钥到 SSH 配置
 add_ssh_key_to_config() {
 	local key_path="$1"
@@ -835,6 +834,28 @@ configGithub() {
 	fi
 
 }
+unlockJetbrain() {
+	echo "Unlocking JetBrains products..."
+
+	# Step 1: Ensure ~/.mace directory exists
+	mkdir -p "${HOME}/.mace"
+
+	# Step 2: Clone or update treasury
+	git -C "${HOME}/.mace" clone https://github.com/Griffinsin/treasury.git || (cd "${HOME}/.mace/treasury" && git pull)
+
+	# Step 3: Execute scripts
+	for script in uninstall.sh install.sh; do
+		if [ -f "${HOME}/.mace/treasury/jetbrainunlock/scripts/$script" ]; then
+			sh "${HOME}/.mace/treasury/jetbrainunlock/scripts/$script"
+		fi
+	done
+
+	# Step 4: Copy activation code to clipboard
+	[ -f "${HOME}/.mace/treasury/jetbrainunlock/激活码.txt" ] && pbcopy <"${HOME}/.mace/treasury/jetbrainunlock/激活码.txt"
+
+	# Step 5: Notify user
+	echo "激活码已经复制到粘贴板，可以粘贴到 JetBrains 软件中了。"
+}
 
 # encrypSSH 函数用于加密 SSH 私钥文件，并将其存储在脚本中。
 # 用户可以选择一个现有的 SSH 私钥，并为其设置一个标识符和加密密码。
@@ -986,6 +1007,7 @@ ipa() {
 	echo "Your Apple ID does not have a license for this app. Download the app on an iOS device to obtain a license."
 	echo "现在设备上下载一个，然后再使用该脚本下载。"
 }
+
 options=(
 	"-h:usage"
 	"-help:usage"
@@ -1023,6 +1045,7 @@ options=(
 	"resetpwd:resetpwd"
 	"screenchange:screenchange"
 	"pycharm:pycharmOpen"
+	"unlockjetbrain:unlockJetbrain"
 )
 
 while (($# > 0)); do
