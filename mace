@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.164"
+version="0.1.165"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -13,70 +13,70 @@ ENCRYPTED_SSH_KEYS="mace:U2FsdGVkX18iiJ0E4IvJbKvEtbN5T5UU0AF9JrGfKIiLYdoVRJ/hnob
 
 # 查找键值对
 find_key() {
-  local key="$1"
-  local pattern="|$key:"
-  local start=${ENCRYPTED_SSH_KEYS#*$pattern}
-  if [[ "$start" != "$ENCRYPTED_SSH_KEYS" ]]; then
-    return 0
-  fi
-  return 1
+	local key="$1"
+	local pattern="|$key:"
+	local start=${ENCRYPTED_SSH_KEYS#*$pattern}
+	if [[ "$start" != "$ENCRYPTED_SSH_KEYS" ]]; then
+		return 0
+	fi
+	return 1
 }
 
 # 更新或添加键值对
 update_key() {
-  local key="$1"
-  local value="$2"
-  # 改进移除旧的键值对的逻辑
-  current_keys="${ENCRYPTED_SSH_KEYS//${key}:[^|]*/}"
+	local key="$1"
+	local value="$2"
+	# 改进移除旧的键值对的逻辑
+	current_keys="${ENCRYPTED_SSH_KEYS//${key}:[^|]*/}"
 
-  # 添加新的键值对
-  if [[ -n "$current_keys" ]]; then
-    current_keys+="|"
-  fi
-  current_keys+="$key:$value"
-  ENCRYPTED_SSH_KEYS="$current_keys"
+	# 添加新的键值对
+	if [[ -n "$current_keys" ]]; then
+		current_keys+="|"
+	fi
+	current_keys+="$key:$value"
+	ENCRYPTED_SSH_KEYS="$current_keys"
 }
 
 # 更新或添加键值对并注入到脚本中
 inject_key_to_script() {
-  local key="$1"
-  local value="$2"
-  local script_path="$3"
+	local key="$1"
+	local value="$2"
+	local script_path="$3"
 
-  # 读取当前的 ENCRYPTED_SSH_KEYS
-  local current_keys=$(grep '^ENCRYPTED_SSH_KEYS=' "$script_path" | cut -d'"' -f2)
+	# 读取当前的 ENCRYPTED_SSH_KEYS
+	local current_keys=$(grep '^ENCRYPTED_SSH_KEYS=' "$script_path" | cut -d'"' -f2)
 
-  # 移除旧的键值对
-  current_keys="${current_keys//${key}:[^|]*/}"
-  # 添加新的键值对
-  if [[ -n "$current_keys" ]]; then
-    current_keys+="|"
-  fi
-  current_keys+="$key:$value"
+	# 移除旧的键值对
+	current_keys="${current_keys//${key}:[^|]*/}"
+	# 添加新的键值对
+	if [[ -n "$current_keys" ]]; then
+		current_keys+="|"
+	fi
+	current_keys+="$key:$value"
 
-  echo "Updated keys: $key"
+	echo "Updated keys: $key"
 
-  # 使用 awk 更新脚本中的 ENCRYPTED_SSH_KEYS 变量
-  awk -v new_keys="$current_keys" '/^ENCRYPTED_SSH_KEYS=/ {$0="ENCRYPTED_SSH_KEYS=\""new_keys"\""} 1' "$script_path" > temp_script && mv temp_script "$script_path"
+	# 使用 awk 更新脚本中的 ENCRYPTED_SSH_KEYS 变量
+	awk -v new_keys="$current_keys" '/^ENCRYPTED_SSH_KEYS=/ {$0="ENCRYPTED_SSH_KEYS=\""new_keys"\""} 1' "$script_path" >temp_script && mv temp_script "$script_path"
 
-  # 检查 awk 和 mv 命令的执行结果
-  if [[ $? -eq 0 ]]; then
-    echo "Keys successfully injected into script."
-  else
-    echo "Failed to inject keys into script."
-  fi
+	# 检查 awk 和 mv 命令的执行结果
+	if [[ $? -eq 0 ]]; then
+		echo "Keys successfully injected into script."
+	else
+		echo "Failed to inject keys into script."
+	fi
 }
 
 usage() {
-  # 打印可用的方法列表
-  for func in "${functions[@]}"; do
-    name="${func%%:*}"
-    method="${func##*:}"
-    echo "$name ---------- $method"
-  done
+	# 打印可用的方法列表
+	for func in "${functions[@]}"; do
+		name="${func%%:*}"
+		method="${func##*:}"
+		echo "$name ---------- $method"
+	done
 }
 howToCreateMace() {
-  cat <<EOF
+	cat <<EOF
   Script name: $script_name
   Description:
   ============
@@ -103,7 +103,7 @@ EOF
 }
 
 githubHelp() {
-  cat <<EOF
+	cat <<EOF
 1，settings
 2，Developer settings
 3, Personal access tokens
@@ -120,575 +120,574 @@ EOF
 #homebrew 库的目录 ： jim928Path
 
 deleterb() {
-  find $(brew --repo)/Library/Taps/homebrew/homebrew-core -name 'mace.rb' -type f -print -exec rm -rf {} \;
+	find $(brew --repo)/Library/Taps/homebrew/homebrew-core -name 'mace.rb' -type f -print -exec rm -rf {} \;
 }
 
 openGoogleFolder() {
-  open ~/Library/Application\ Support/Google
+	open ~/Library/Application\ Support/Google
 }
 openUserDataFolder() {
-  open ~/Library/Developer/Xcode/UserData
+	open ~/Library/Developer/Xcode/UserData
 }
 openJetBrainFolder() {
-  open ~/Library/Application\ Support/JetBrains
+	open ~/Library/Application\ Support/JetBrains
 }
 
 getSSHKey() {
-  # 查找 ~/.ssh/ 目录下所有的 .pub 文件
-  pub_files=$(find ~/.ssh -name "*.pub")
-  pub_files_array=($pub_files)
+	# 查找 ~/.ssh/ 目录下所有的 .pub 文件
+	pub_files=$(find ~/.ssh -name "*.pub")
+	pub_files_array=($pub_files)
 
-  if [ ${#pub_files_array[@]} -gt 0 ]; then
-    echo "找到以下SSH公钥文件："
-    select pub_file in "${pub_files_array[@]}"; do
-      if [ -n "$pub_file" ]; then
-        # 将选定的公钥文件内容复制到剪贴板
-        cat "$pub_file" | pbcopy
-        echo "$pub_file 现在已经复制到剪贴板"
-        break
-      else
-        echo "无效选择。"
-      fi
-    done
-  else
-    echo "未找到SSH公钥文件，现在生成一个。"
-    makessh
-  fi
+	if [ ${#pub_files_array[@]} -gt 0 ]; then
+		echo "找到以下SSH公钥文件："
+		select pub_file in "${pub_files_array[@]}"; do
+			if [ -n "$pub_file" ]; then
+				# 将选定的公钥文件内容复制到剪贴板
+				cat "$pub_file" | pbcopy
+				echo "$pub_file 现在已经复制到剪贴板"
+				break
+			else
+				echo "无效选择。"
+			fi
+		done
+	else
+		echo "未找到SSH公钥文件，现在生成一个。"
+		makessh
+	fi
 }
-
 
 #################### test func ####################
 testFunc() {
-  echo "testFunc"
+	echo "testFunc"
 }
 
 #################### publish new version of mace ####################
 publishNewVersion() {
-  cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
+	cd "$maceWorkDir/mace" || echo "cd to path failed :$maceWorkDir/mace"
 
-  # 删除所有本地标签
-  git tag -l | xargs git tag -d >/dev/null 2>&1
+	# 删除所有本地标签
+	git tag -l | xargs git tag -d >/dev/null 2>&1
 
-  # 拉取最新标签
-  git fetch --tags >/dev/null 2>&1
-  git pull
+	# 拉取最新标签
+	git fetch --tags >/dev/null 2>&1
+	git pull
 
-  # 修改版本号
-  # 获取当前文件夹下 mace 文件的版本号
-  current_version=$(grep 'version=' mace | sed -n 's/version="\([^"]*\)".*/\1/p' | head -n 1)
+	# 修改版本号
+	# 获取当前文件夹下 mace 文件的版本号
+	current_version=$(grep 'version=' mace | sed -n 's/version="\([^"]*\)".*/\1/p' | head -n 1)
 
-  # 递增版本号
-  new_version=$(awk -F. -v OFS=. '{print $1,$2,$3+1}' <<<"$current_version")
+	# 递增版本号
+	new_version=$(awk -F. -v OFS=. '{print $1,$2,$3+1}' <<<"$current_version")
 
-  # 使用 sed 命令替换文件中的 version 变量
-  sed -i '' "s/version=\"$current_version\"/version=\"$new_version\"/" mace
+	# 使用 sed 命令替换文件中的 version 变量
+	sed -i '' "s/version=\"$current_version\"/version=\"$new_version\"/" mace
 
-  # 输出新版本号``
-  echo "Old Version: $current_version"
-  echo "New Version: $new_version"
+	# 输出新版本号``
+	echo "Old Version: $current_version"
+	echo "New Version: $new_version"
 
-  # 获取当前日期
-  current_date=$(date +"%Y-%m-%d")
-  git add .
-  git commit -m "publishMac commit from mace - ${current_date}." -a
-  #  git push "${maceGitUrl}" HEAD:master
+	# 获取当前日期
+	current_date=$(date +"%Y-%m-%d")
+	git add .
+	git commit -m "publishMac commit from mace - ${current_date}." -a
+	#  git push "${maceGitUrl}" HEAD:master
 
-  # 创建新 tag
-  git tag -a "$new_version" -m "$new_version"
+	# 创建新 tag
+	git tag -a "$new_version" -m "$new_version"
 
-  # 推送所有分支和标签
-  git push "${maceGitUrl}" HEAD:master
-  echo "push mace changes to $maceGitUrl done"
-  git push --tags "${maceGitUrl}"
-  echo "push mace tags to $maceGitUrl done"
+	# 推送所有分支和标签
+	git push "${maceGitUrl}" HEAD:master
+	echo "push mace changes to $maceGitUrl done"
+	git push --tags "${maceGitUrl}"
+	echo "push mace tags to $maceGitUrl done"
 
-  ########## release new version to github ########
-  # Replace with your GitHub username and repository name
-  USERNAME="jim928"
-  REPO="mace"
+	########## release new version to github ########
+	# Replace with your GitHub username and repository name
+	USERNAME="jim928"
+	REPO="mace"
 
-  # Replace with the tag name you want to create a release from
-  TAG="$new_version"
+	# Replace with the tag name you want to create a release from
+	TAG="$new_version"
 
-  RELEASE_NOTES="Release notes for version $TAG"
+	RELEASE_NOTES="Release notes for version $TAG"
 
-  echo "Creating GitHub release..."
-  response=$(curl -s -X POST \
-    -H "Accept: application/vnd.github.v3+json" \
-    -H "Content-Type: application/json" \
-    "https://api.github.com/repos/$USERNAME/$REPO/releases" \
-    -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
+	echo "Creating GitHub release..."
+	response=$(curl -s -X POST \
+		-H "Accept: application/vnd.github.v3+json" \
+		-H "Content-Type: application/json" \
+		"https://api.github.com/repos/$USERNAME/$REPO/releases" \
+		-d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"$RELEASE_NOTES\"}")
 
-  # Print the response from GitHub API
-  echo "$response"
+	# Print the response from GitHub API
+	echo "$response"
 
-  # Extract the release ID from the response
-  release_id=$(echo "$response" | jq -r '.id')
-  echo "Release ID: $release_id"
+	# Extract the release ID from the response
+	release_id=$(echo "$response" | jq -r '.id')
+	echo "Release ID: $release_id"
 
-  # 提取源代码（tar.gz）文件的下载链接
-  download_url="https://github.com/jim928/mace/archive/refs/tags/$new_version.tar.gz"
+	# 提取源代码（tar.gz）文件的下载链接
+	download_url="https://github.com/jim928/mace/archive/refs/tags/$new_version.tar.gz"
 
-  # 打印下载链接
-  echo "源代码下载链接: $download_url"
+	# 打印下载链接
+	echo "源代码下载链接: $download_url"
 
-  ######## 开始brew 发布 流程 ########
-  # Formula name
-  formula_name="mace"
+	######## 开始brew 发布 流程 ########
+	# Formula name
+	formula_name="mace"
 
-  # Source URL
-  source_url="$download_url"
+	# Source URL
+	source_url="$download_url"
 
-  ######## 生成 mace.rb 文件 ########
+	######## 生成 mace.rb 文件 ########
 
-  # Homebrew Core Formula directory
-  formula_directory="$HOME/.mace/homebrew-mace"
+	# Homebrew Core Formula directory
+	formula_directory="$HOME/.mace/homebrew-mace"
 
-  # if formula_directory not exist, clone it else update it
-  if [ ! -d "$formula_directory" ]; then
-    echo "homebrew-mace directory does not exist. Cloning..."
-    mkdir -p "$formula_directory"
-    git clone "${homebrew_mace_url}" "$formula_directory"
-  else
-    echo "homebrew-mace directory exists. Updating..."
-    cd "$formula_directory" || {
-      echo "cd to path failed: $formula_directory"
-      exit 1
-    }
-    git fetch && git pull
-  fi
+	# if formula_directory not exist, clone it else update it
+	if [ ! -d "$formula_directory" ]; then
+		echo "homebrew-mace directory does not exist. Cloning..."
+		mkdir -p "$formula_directory"
+		git clone "${homebrew_mace_url}" "$formula_directory"
+	else
+		echo "homebrew-mace directory exists. Updating..."
+		cd "$formula_directory" || {
+			echo "cd to path failed: $formula_directory"
+			exit 1
+		}
+		git fetch && git pull
+	fi
 
-  cd "$formula_directory" || {
-    echo "cd to path failed: $formula_directory"
-    exit 1
-  }
+	cd "$formula_directory" || {
+		echo "cd to path failed: $formula_directory"
+		exit 1
+	}
 
-  mace_formula_path="$formula_directory/$formula_name.rb"
+	mace_formula_path="$formula_directory/$formula_name.rb"
 
-  # Create mace.rb with SHA256 checksum
-  echo "class Mace < Formula" >"$mace_formula_path"
-  echo "  desc \"Your description here\"" >>"$mace_formula_path"
-  echo "  homepage \"https://github.com/jim928/mace\"" >>"$mace_formula_path"
-  echo "  url \"$source_url\"" >>"$mace_formula_path"
-  echo "  sha256 \"$(curl -Ls "$source_url" | shasum -a 256 | cut -d ' ' -f 1)\"" >>"$mace_formula_path"
-  echo "" >>"$mace_formula_path"
-  echo "  # ... 其他 Formula 配置信息 ..." >>"$mace_formula_path"
-  echo "" >>"$mace_formula_path"
-  echo "  def install" >>"$mace_formula_path"
-  echo "    bin.install 'mace'" >>"$mace_formula_path"
-  echo "  end" >>"$mace_formula_path"
-  echo "end" >>"$mace_formula_path"
+	# Create mace.rb with SHA256 checksum
+	echo "class Mace < Formula" >"$mace_formula_path"
+	echo "  desc \"Your description here\"" >>"$mace_formula_path"
+	echo "  homepage \"https://github.com/jim928/mace\"" >>"$mace_formula_path"
+	echo "  url \"$source_url\"" >>"$mace_formula_path"
+	echo "  sha256 \"$(curl -Ls "$source_url" | shasum -a 256 | cut -d ' ' -f 1)\"" >>"$mace_formula_path"
+	echo "" >>"$mace_formula_path"
+	echo "  # ... 其他 Formula 配置信息 ..." >>"$mace_formula_path"
+	echo "" >>"$mace_formula_path"
+	echo "  def install" >>"$mace_formula_path"
+	echo "    bin.install 'mace'" >>"$mace_formula_path"
+	echo "  end" >>"$mace_formula_path"
+	echo "end" >>"$mace_formula_path"
 
-  # Print the path to the created mace.rb file
-  echo "Formula file created at: $mace_formula_path"
+	# Print the path to the created mace.rb file
+	echo "Formula file created at: $mace_formula_path"
 
-  git add .
-  git commit -m "publish mace.rb $new_version commit from mace}." -a
-  git push "${homebrew_mace_url}" HEAD:master
+	git add .
+	git commit -m "publish mace.rb $new_version commit from mace}." -a
+	git push "${homebrew_mace_url}" HEAD:master
 }
 
 ################ upgrade mace version from brew ###############
 upgradeFunc() {
-  brew uninstall mace
-  brew untap jim928/mace
-  brew tap jim928/mace
-  brew install mace
+	brew uninstall mace
+	brew untap jim928/mace
+	brew tap jim928/mace
+	brew install mace
 }
 
 ################ delete all .lock files ################
 deleteAllLockFiles() {
-  echo "find . -name '*.lock' -type f -print -exec rm -rf {} \;"
-  find . -name '*.lock' -type f -print -exec rm -rf {} \;
+	echo "find . -name '*.lock' -type f -print -exec rm -rf {} \;"
+	find . -name '*.lock' -type f -print -exec rm -rf {} \;
 }
 
 showColors() {
-  echo "透明度从100%到0%的16进制值及对应百分比："
-  colorList="100% — FF,99% — FC,98% — FA,97% — F7,96% — F5,95% — F2,94% — F0,93% — ED,92% — EB,91% — E8,90% — E6,89% — E3,88% — E0,87% — DE,86% — DB,85% — D9,84% — D6,83% — D4,82% — D1,81% — CF,80% — CC,79% — C9,78% — C7,77% — C4,76% — C2,75% — BF,74% — BD,73% — BA,72% — B8,71% — B5,70% — B3,69% — B0,68% — AD,67% — AB,66% — A8,65% — A6,64% — A3,63% — A1,62% — 9E,61% — 9C,60% — 99,59% — 96,58% — 94,57% — 91,56% — 8F,55% — 8C,54% — 8A,53% — 87,52% — 85,51% — 82,50% — 80,49% — 7D,48% — 7A,47% — 78,46% — 75,45% — 73,44% — 70,43% — 6E,42% — 6B,41% — 69,40% — 66,39% — 63,38% — 61,37% — 5E,36% — 5C,35% — 59,34% — 57,33% — 54,32% — 52,31% — 4F,30% — 4D,29% — 4A,28% — 47,27% — 45,26% — 42,25% — 40,24% — 3D,23% — 3B,22% — 38,21% — 36,20% — 33,19% — 30,18% — 2E,17% — 2B,16% — 29,15% — 26,14% — 24,13% — 21,12% — 1F,11% — 1C,10% — 1A,9% — 17,8% — 14,7% — 12,6% — 0F,5% — 0D,4% — 0A,3% — 08,2% — 05,1% — 03,0% — 00"
-  echo "$colorList" | tr ',' '\n'
+	echo "透明度从100%到0%的16进制值及对应百分比："
+	colorList="100% — FF,99% — FC,98% — FA,97% — F7,96% — F5,95% — F2,94% — F0,93% — ED,92% — EB,91% — E8,90% — E6,89% — E3,88% — E0,87% — DE,86% — DB,85% — D9,84% — D6,83% — D4,82% — D1,81% — CF,80% — CC,79% — C9,78% — C7,77% — C4,76% — C2,75% — BF,74% — BD,73% — BA,72% — B8,71% — B5,70% — B3,69% — B0,68% — AD,67% — AB,66% — A8,65% — A6,64% — A3,63% — A1,62% — 9E,61% — 9C,60% — 99,59% — 96,58% — 94,57% — 91,56% — 8F,55% — 8C,54% — 8A,53% — 87,52% — 85,51% — 82,50% — 80,49% — 7D,48% — 7A,47% — 78,46% — 75,45% — 73,44% — 70,43% — 6E,42% — 6B,41% — 69,40% — 66,39% — 63,38% — 61,37% — 5E,36% — 5C,35% — 59,34% — 57,33% — 54,32% — 52,31% — 4F,30% — 4D,29% — 4A,28% — 47,27% — 45,26% — 42,25% — 40,24% — 3D,23% — 3B,22% — 38,21% — 36,20% — 33,19% — 30,18% — 2E,17% — 2B,16% — 29,15% — 26,14% — 24,13% — 21,12% — 1F,11% — 1C,10% — 1A,9% — 17,8% — 14,7% — 12,6% — 0F,5% — 0D,4% — 0A,3% — 08,2% — 05,1% — 03,0% — 00"
+	echo "$colorList" | tr ',' '\n'
 }
 
 jetbrains_apps=("PyCharm" "GoLand" "IntelliJ IDEA" "IntelliJ IDEA CE" "WebStorm" "CLion" "PhpStorm" "RubyMine" "DataGrip")
 
 configMaceDevTable() {
-  # Use ANSI escape codes for colored output
-  RED='\033[31m'
-  NC='\033[0m' # No Color
+	# Use ANSI escape codes for colored output
+	RED='\033[31m'
+	NC='\033[0m' # No Color
 
-  # Check if the .mace directory exists in the home directory, if not, create it
-  if [ ! -d "$HOME/.mace" ]; then
-    mkdir "$HOME/.mace"
-    echo ".mace directory created in home directory."
-  else
-    echo ".mace directory already exists."
-  fi
-  # Change directory to ~/.mace
-  cd "$HOME/.mace"
-  # Check if the .mace directory is empty before cloning
-     echo "Cloning repository from $maceGitUrl into ~/.mace/mace..."
-    if [ -d "$HOME/.mace/mace" ]; then
-      echo "Directory ~/.mace/mace already exists. Skipping clone."
-    else
-      if git clone "$maceGitUrl" "$HOME/.mace/mace"; then
-        echo "Repository cloned successfully into ~/.mace/mace."
-      else
-        echo -e "${RED}Failed to clone repository into ~/.mace/mace. Please check your SSH permissions.${NC}"
-      fi
-    fi
+	# Check if the .mace directory exists in the home directory, if not, create it
+	if [ ! -d "$HOME/.mace" ]; then
+		mkdir "$HOME/.mace"
+		echo ".mace directory created in home directory."
+	else
+		echo ".mace directory already exists."
+	fi
+	# Change directory to ~/.mace
+	cd "$HOME/.mace"
+	# Check if the .mace directory is empty before cloning
+	echo "Cloning repository from $maceGitUrl into ~/.mace/mace..."
+	if [ -d "$HOME/.mace/mace" ]; then
+		echo "Directory ~/.mace/mace already exists. Skipping clone."
+	else
+		if git clone "$maceGitUrl" "$HOME/.mace/mace"; then
+			echo "Repository cloned successfully into ~/.mace/mace."
+		else
+			echo -e "${RED}Failed to clone repository into ~/.mace/mace. Please check your SSH permissions.${NC}"
+		fi
+	fi
 
-    echo "Cloning repository from $homebrew_mace_url into ~/.mace/homebrew-mace..."
-    if [ -d "$HOME/.mace/homebrew-mace" ]; then
-      echo "Directory ~/.mace/homebrew-mace already exists. Skipping clone."
-    else
-      if git clone "$homebrew_mace_url" "$HOME/.mace/homebrew-mace"; then
-        echo "Homebrew-mace repository cloned successfully into ~/.mace/homebrew-mace."
-      else
-        echo -e "${RED}Failed to clone homebrew-mace repository into ~/.mace/homebrew-mace. Please check your SSH permissions.${NC}"
-      fi
-    fi
+	echo "Cloning repository from $homebrew_mace_url into ~/.mace/homebrew-mace..."
+	if [ -d "$HOME/.mace/homebrew-mace" ]; then
+		echo "Directory ~/.mace/homebrew-mace already exists. Skipping clone."
+	else
+		if git clone "$homebrew_mace_url" "$HOME/.mace/homebrew-mace"; then
+			echo "Homebrew-mace repository cloned successfully into ~/.mace/homebrew-mace."
+		else
+			echo -e "${RED}Failed to clone homebrew-mace repository into ~/.mace/homebrew-mace. Please check your SSH permissions.${NC}"
+		fi
+	fi
 
-  # List of JetBrains IDEs to try, including IntelliJ IDEA Community Edition
-  for app in "${jetbrains_apps[@]}"; do
-    echo "Attempting to open ~/.mace/mace with $app..."
-    if open -a "$app" "$HOME/.mace/mace"; then
-      echo "Opened ~/.mace/mace with $app."
-      break
-    else
-      echo "$app failed to open ~/.mace. Trying next..."
-    fi
-  done
+	# List of JetBrains IDEs to try, including IntelliJ IDEA Community Edition
+	for app in "${jetbrains_apps[@]}"; do
+		echo "Attempting to open ~/.mace/mace with $app..."
+		if open -a "$app" "$HOME/.mace/mace"; then
+			echo "Opened ~/.mace/mace with $app."
+			break
+		else
+			echo "$app failed to open ~/.mace. Trying next..."
+		fi
+	done
 
 }
 
 importSettings() {
-  # importSettings 方法用于克隆或更新 dev_settings 仓库。
-  # 逻辑如下：
-  # 1. 检查 ~/.mace/dev_settings 目录是否存在。
-  # 2. 如果不存在，使用 HTTPS 克隆仓库。
-  # 3. 如果存在，确保远程 URL 为 HTTPS 格式，并拉取最新更改。
-  # 4. 将 JetBrains IDE、Android Studio 和 Xcode 的设置从 dev_settings 目录复制到相应的配置目录。
-  
-  if [ ! -d "$HOME/.mace/dev_settings" ]; then
-    echo "Cloning repository from https://github.com/Griffinsin/dev_settings.git into ~/.mace/dev_settings..."
-    if git clone "https://github.com/Griffinsin/dev_settings.git" "$HOME/.mace/dev_settings"; then
-      echo "Repository cloned successfully into ~/.mace/dev_settings."
-    else
-      echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your network connection.${NC}"
-    fi
-  else
-    echo "Directory ~/.mace/dev_settings already exists. Attempting to update the repository..."
-    cd "$HOME/.mace/dev_settings"
-    # Ensure the remote URL is set to HTTPS
-    git remote set-url origin https://github.com/Griffinsin/dev_settings.git
-    if git pull; then
-      echo "Repository updated successfully."
-    else
-      echo -e "${RED}Failed to update the repository. Please check your network connection and permissions.${NC}"
-    fi
-  fi
+	# importSettings 方法用于克隆或更新 dev_settings 仓库。
+	# 逻辑如下：
+	# 1. 检查 ~/.mace/dev_settings 目录是否存在。
+	# 2. 如果不存在，使用 HTTPS 克隆仓库。
+	# 3. 如果存在，确保远程 URL 为 HTTPS 格式，并拉取最新更改。
+	# 4. 将 JetBrains IDE、Android Studio 和 Xcode 的设置从 dev_settings 目录复制到相应的配置目录。
 
-  # Iterate over JetBrains IDEs
-  for app in "${jetbrains_apps[@]}"; do
-    # Use a wildcard to match versioned directories in JetBrains folder
-    for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
-      if [ -d "$config_dir" ]; then
-        cp -r "$HOME/.mace/dev_settings/keymaps" "$config_dir"
-        cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
-        print_color "$GREEN" "Settings copied to $app."
-      # else
-      #   echo "$app configuration directory not found."
-      fi
-    done
-  done
+	if [ ! -d "$HOME/.mace/dev_settings" ]; then
+		echo "Cloning repository from https://github.com/Griffinsin/dev_settings.git into ~/.mace/dev_settings..."
+		if git clone "https://github.com/Griffinsin/dev_settings.git" "$HOME/.mace/dev_settings"; then
+			echo "Repository cloned successfully into ~/.mace/dev_settings."
+		else
+			echo -e "${RED}Failed to clone repository into ~/.mace/dev_settings. Please check your network connection.${NC}"
+		fi
+	else
+		echo "Directory ~/.mace/dev_settings already exists. Attempting to update the repository..."
+		cd "$HOME/.mace/dev_settings"
+		# Ensure the remote URL is set to HTTPS
+		git remote set-url origin https://github.com/Griffinsin/dev_settings.git
+		if git pull; then
+			echo "Repository updated successfully."
+		else
+			echo -e "${RED}Failed to update the repository. Please check your network connection and permissions.${NC}"
+		fi
+	fi
 
-  # Handle Android Studio separately
-  for config_dir in "$HOME/Library/Application Support/Google/AndroidStudio"*; do
-    if [ -d "$config_dir" ]; then
-      cp -r "$HOME/.mace/dev_settings/keymaps" "$config_dir"
-      cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
-      print_color "$GREEN" "Settings copied to Android Studio."
-    else
-      echo "Android Studio configuration directory not found."
-    fi
-  done
+	# Iterate over JetBrains IDEs
+	for app in "${jetbrains_apps[@]}"; do
+		# Use a wildcard to match versioned directories in JetBrains folder
+		for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
+			if [ -d "$config_dir" ]; then
+				cp -r "$HOME/.mace/dev_settings/keymaps" "$config_dir"
+				cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
+				print_color "$GREEN" "Settings copied to $app."
+			# else
+			#   echo "$app configuration directory not found."
+			fi
+		done
+	done
 
-  # Handle Xcode CodeSnippets
-  local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
-  if [ -d "$HOME/.mace/dev_settings/CodeSnippets" ]; then
-    mkdir -p "$xcode_snippets_dir"
-    cp -r "$HOME/.mace/dev_settings/CodeSnippets"/* "$xcode_snippets_dir"
-    print_color "$GREEN" "CodeSnippets copied to Xcode."
-  else
-    echo "CodeSnippets directory not found in dev_settings."
-  fi
+	# Handle Android Studio separately
+	for config_dir in "$HOME/Library/Application Support/Google/AndroidStudio"*; do
+		if [ -d "$config_dir" ]; then
+			cp -r "$HOME/.mace/dev_settings/keymaps" "$config_dir"
+			cp -r "$HOME/.mace/dev_settings/templates" "$config_dir"
+			print_color "$GREEN" "Settings copied to Android Studio."
+		else
+			echo "Android Studio configuration directory not found."
+		fi
+	done
+
+	# Handle Xcode CodeSnippets
+	local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
+	if [ -d "$HOME/.mace/dev_settings/CodeSnippets" ]; then
+		mkdir -p "$xcode_snippets_dir"
+		cp -r "$HOME/.mace/dev_settings/CodeSnippets"/* "$xcode_snippets_dir"
+		print_color "$GREEN" "CodeSnippets copied to Xcode."
+	else
+		echo "CodeSnippets directory not found in dev_settings."
+	fi
 }
 
 uploadSettings() {
-  # uploadSettings 方法用于同步 JetBrains IDE、Android Studio 和 Xcode 的设置到 dev_settings 仓库。
-  # 逻辑如下：
-  # 1. 确保远程 URL 为 SSH 格式，以便使用 SSH 密钥进行推送。
-  # 2. 遍历所有配置的 JetBrains IDE，复制 keymaps 和 templates 目录到 dev_settings。
-  # 3. 检查 dev_settings 目录中的更改，如果有更改则提交并推送到远程仓库。
-  # 4. 同样处理 Android Studio 和 Xcode 的设置。
+	# uploadSettings 方法用于同步 JetBrains IDE、Android Studio 和 Xcode 的设置到 dev_settings 仓库。
+	# 逻辑如下：
+	# 1. 确保远程 URL 为 SSH 格式，以便使用 SSH 密钥进行推送。
+	# 2. 遍历所有配置的 JetBrains IDE，复制 keymaps 和 templates 目录到 dev_settings。
+	# 3. 检查 dev_settings 目录中的更改，如果有更改则提交并推送到远程仓库。
+	# 4. 同样处理 Android Studio 和 Xcode 的设置。
 
-  local repo_dir="$HOME/.mace/dev_settings"
-  echo "Syncing settings from JetBrains IDEs to $repo_dir..."
-  
-  # Set remote URL to SSH format for pushing
-  cd "$repo_dir"
-  git remote set-url origin git@github.com:Griffinsin/dev_settings.git
+	local repo_dir="$HOME/.mace/dev_settings"
+	echo "Syncing settings from JetBrains IDEs to $repo_dir..."
 
-  # Iterate over JetBrains IDEs
-  for app in "${jetbrains_apps[@]}"; do
-    # Use a wildcard to match versioned directories in JetBrains folder
-    for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
-      if [ -d "$config_dir" ]; then
-        for sub_dir in keymaps templates; do
-          if [ -d "$config_dir/$sub_dir" ]; then
-            echo "Syncing $sub_dir from $config_dir to $repo_dir..."
-            rm -rf "$repo_dir/$sub_dir"  # Clear the destination directory
-            mkdir -p "$repo_dir/$sub_dir"
-            cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
-            
-            # Check for changes and commit
-            cd "$repo_dir"
-            if [ -n "$(git status --porcelain)" ]; then
-              git add .
-              git commit -m "Update $sub_dir from $app"
-              git push origin main
-              print_color "$GREEN" "Changes in $sub_dir from $app uploaded successfully."
-              return 0  # Exit the function after a successful commit
-            else
-              print_color "$GREEN" "No changes to commit for $sub_dir from $app."
-            fi
-          else
-            print_color "$RED" "$sub_dir directory not found in $app."
-          fi
-        done
-      else
-        print_color "$RED" "$app configuration directory not found."
-      fi
-    done
-  done
+	# Set remote URL to SSH format for pushing
+	cd "$repo_dir"
+	git remote set-url origin git@github.com:Griffinsin/dev_settings.git
 
-  # Handle Android Studio
-  echo "Syncing settings from Android Studio to $repo_dir..."
-  for config_dir in "$HOME/Library/Application Support/Google/AndroidStudio"*; do
-    if [ -d "$config_dir" ]; then
-      for sub_dir in keymaps templates; do
-        if [ -d "$config_dir/$sub_dir" ]; then
-          echo "Syncing $sub_dir from $config_dir to $repo_dir..."
-          rm -rf "$repo_dir/$sub_dir"  # Clear the destination directory
-          mkdir -p "$repo_dir/$sub_dir"
-          cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
-          
-          # Check for changes and commit
-          cd "$repo_dir"
-          if [ -n "$(git status --porcelain)" ]; then
-            git add .
-            git commit -m "Update $sub_dir from Android Studio"
-            git push origin main
-            print_color "$GREEN" "Changes in $sub_dir from Android Studio uploaded successfully."
-            return 0  # Exit the function after a successful commit
-          else
-            print_color "$GREEN" "No changes to commit for $sub_dir from Android Studio."
-          fi
-        else
-          print_color "$RED" "$sub_dir directory not found in Android Studio."
-        fi
-      done
-    else
-      echo "Android Studio configuration directory not found."
-    fi
-  done
+	# Iterate over JetBrains IDEs
+	for app in "${jetbrains_apps[@]}"; do
+		# Use a wildcard to match versioned directories in JetBrains folder
+		for config_dir in "$HOME/Library/Application Support/JetBrains/${app}"*; do
+			if [ -d "$config_dir" ]; then
+				for sub_dir in keymaps templates; do
+					if [ -d "$config_dir/$sub_dir" ]; then
+						echo "Syncing $sub_dir from $config_dir to $repo_dir..."
+						rm -rf "$repo_dir/$sub_dir" # Clear the destination directory
+						mkdir -p "$repo_dir/$sub_dir"
+						cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
 
-  # Handle Xcode CodeSnippets
-  local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
-  if [ -d "$HOME/.mace/dev_settings/CodeSnippets" ]; then
-    echo "Syncing Xcode CodeSnippets to $repo_dir..."
-    rm -rf "$repo_dir/CodeSnippets"  # Clear the destination directory
-    mkdir -p "$repo_dir/CodeSnippets"
-    cp -r "$xcode_snippets_dir"/* "$repo_dir/CodeSnippets/"
-    
-    # Check for changes and commit
-    cd "$repo_dir"
-    git add -A  # Ensure all files in CodeSnippets are tracked
-    if [ -n "$(git status --porcelain)" ]; then
-      git commit -m "Update CodeSnippets from Xcode"
-      git push origin main
-      print_color "$GREEN" "Xcode CodeSnippets uploaded successfully."
-      return 0  # Exit the function after a successful commit
-    else
-      print_color "$GREEN" "No changes to commit for Xcode CodeSnippets."
-    fi
-  else
-    echo "CodeSnippets directory not found in dev_settings."
-  fi
+						# Check for changes and commit
+						cd "$repo_dir"
+						if [ -n "$(git status --porcelain)" ]; then
+							git add .
+							git commit -m "Update $sub_dir from $app"
+							git push origin main
+							print_color "$GREEN" "Changes in $sub_dir from $app uploaded successfully."
+							return 0 # Exit the function after a successful commit
+						else
+							print_color "$GREEN" "No changes to commit for $sub_dir from $app."
+						fi
+					else
+						print_color "$RED" "$sub_dir directory not found in $app."
+					fi
+				done
+			else
+				print_color "$RED" "$app configuration directory not found."
+			fi
+		done
+	done
 
-  print_color "$GREEN" "No changes detected for any JetBrains IDEs."
+	# Handle Android Studio
+	echo "Syncing settings from Android Studio to $repo_dir..."
+	for config_dir in "$HOME/Library/Application Support/Google/AndroidStudio"*; do
+		if [ -d "$config_dir" ]; then
+			for sub_dir in keymaps templates; do
+				if [ -d "$config_dir/$sub_dir" ]; then
+					echo "Syncing $sub_dir from $config_dir to $repo_dir..."
+					rm -rf "$repo_dir/$sub_dir" # Clear the destination directory
+					mkdir -p "$repo_dir/$sub_dir"
+					cp -r "$config_dir/$sub_dir"/* "$repo_dir/$sub_dir/"
+
+					# Check for changes and commit
+					cd "$repo_dir"
+					if [ -n "$(git status --porcelain)" ]; then
+						git add .
+						git commit -m "Update $sub_dir from Android Studio"
+						git push origin main
+						print_color "$GREEN" "Changes in $sub_dir from Android Studio uploaded successfully."
+						return 0 # Exit the function after a successful commit
+					else
+						print_color "$GREEN" "No changes to commit for $sub_dir from Android Studio."
+					fi
+				else
+					print_color "$RED" "$sub_dir directory not found in Android Studio."
+				fi
+			done
+		else
+			echo "Android Studio configuration directory not found."
+		fi
+	done
+
+	# Handle Xcode CodeSnippets
+	local xcode_snippets_dir="$HOME/Library/Developer/Xcode/UserData/CodeSnippets"
+	if [ -d "$HOME/.mace/dev_settings/CodeSnippets" ]; then
+		echo "Syncing Xcode CodeSnippets to $repo_dir..."
+		rm -rf "$repo_dir/CodeSnippets" # Clear the destination directory
+		mkdir -p "$repo_dir/CodeSnippets"
+		cp -r "$xcode_snippets_dir"/* "$repo_dir/CodeSnippets/"
+
+		# Check for changes and commit
+		cd "$repo_dir"
+		git add -A # Ensure all files in CodeSnippets are tracked
+		if [ -n "$(git status --porcelain)" ]; then
+			git commit -m "Update CodeSnippets from Xcode"
+			git push origin main
+			print_color "$GREEN" "Xcode CodeSnippets uploaded successfully."
+			return 0 # Exit the function after a successful commit
+		else
+			print_color "$GREEN" "No changes to commit for Xcode CodeSnippets."
+		fi
+	else
+		echo "CodeSnippets directory not found in dev_settings."
+	fi
+
+	print_color "$GREEN" "No changes detected for any JetBrains IDEs."
 }
 
 print_color() {
-  local color_code="$1"
-  local text="$2"
-  echo -e "\033[${color_code}m${text}\033[0m"
+	local color_code="$1"
+	local text="$2"
+	echo -e "\033[${color_code}m${text}\033[0m"
 }
 
 openWithAndroidStudio() {
-  open -a "Android Studio" .
+	open -a "Android Studio" .
 }
 
 # 函数：添加 SSH 密钥到 SSH 配置
 add_ssh_key_to_config() {
-  local key_path="$1"
-  local host="$2"
-  local config_file="$HOME/.ssh/config"
+	local key_path="$1"
+	local host="$2"
+	local config_file="$HOME/.ssh/config"
 
-  # 检查 SSH 配置文件是否存在，不存在则创建
-  if [ ! -f "$config_file" ]; then
-    echo "SSH 配置文件不存在，正在创建..."
-    touch "$config_file"
-    if [ $? -eq 0 ]; then
-      echo "SSH 配置文件已成功创建。"
-      chmod 600 "$config_file"
-    else
-      echo "创建 SSH 配置文件失败。"
-      return
-    fi
-  else
-    echo "SSH 配置文件已存在。"
-  fi
+	# 检查 SSH 配置文件是否存在，不存在则创建
+	if [ ! -f "$config_file" ]; then
+		echo "SSH 配置文件不存在，正在创建..."
+		touch "$config_file"
+		if [ $? -eq 0 ]; then
+			echo "SSH 配置文件已成功创建。"
+			chmod 600 "$config_file"
+		else
+			echo "创建 SSH 配置文件失败。"
+			return
+		fi
+	else
+		echo "SSH 配置文件已存在。"
+	fi
 
-  # 检查是否已存在相同的配置
-  if grep -q "Host $host" "$config_file" && grep -q "IdentityFile $key_path" "$config_file"; then
-    echo "$host 的 SSH 配置已存在，跳过添加。"
-    return
-  fi
+	# 检查是否已存在相同的配置
+	if grep -q "Host $host" "$config_file" && grep -q "IdentityFile $key_path" "$config_file"; then
+		echo "$host 的 SSH 配置已存在，跳过添加。"
+		return
+	fi
 
-  # 添加密钥配置到 SSH 配置文件
-  echo "Host $host" >> "$config_file"
-  echo "  IdentityFile $key_path" >> "$config_file"
-  echo "已将 $key_path 添加到 $host 的 SSH 配置。"
+	# 添加密钥配置到 SSH 配置文件
+	echo "Host $host" >>"$config_file"
+	echo "  IdentityFile $key_path" >>"$config_file"
+	echo "已将 $key_path 添加到 $host 的 SSH 配置。"
 }
 
 configGithub() {
-  # 函数：检查并设置 Git 全局配置
-  check_and_set_git_config() {
-    local config_name="$1"
-    local config_value="$2"
-    local prompt_message="$3"
+	# 函数：检查并设置 Git 全局配置
+	check_and_set_git_config() {
+		local config_name="$1"
+		local config_value="$2"
+		local prompt_message="$3"
 
-    local existing_value=$(git config --global "$config_name")
-    if [ -n "$existing_value" ]; then
-      printf "Git 全局 %s 已设置为 %s，跳过此步骤。\n" "$config_name" "$existing_value"
-    else
-      read -p "$prompt_message" user_input
-      git config --global "$config_name" "$user_input"
-      printf "Git 全局 %s 已设置为 %s。\n" "$config_name" "$user_input"
-    fi
-  }
+		local existing_value=$(git config --global "$config_name")
+		if [ -n "$existing_value" ]; then
+			printf "Git 全局 %s 已设置为 %s，跳过此步骤。\n" "$config_name" "$existing_value"
+		else
+			read -p "$prompt_message" user_input
+			git config --global "$config_name" "$user_input"
+			printf "Git 全局 %s 已设置为 %s。\n" "$config_name" "$user_input"
+		fi
+	}
 
-  # 检查并设置 Git 用户名和邮箱
-  check_and_set_git_config "user.name" "Git 全局用户名" "请输入您的 Git 全局用户名: "
-  check_and_set_git_config "user.email" "Git 全局邮箱" "请输入您的 Git 全局邮箱: "
+	# 检查并设置 Git 用户名和邮箱
+	check_and_set_git_config "user.name" "Git 全局用户名" "请输入您的 Git 全局用户名: "
+	check_and_set_git_config "user.email" "Git 全局邮箱" "请输入您的 Git 全局邮箱: "
 
-  # 尝试 SSH 连接
-  echo "尝试 SSH 连接到 GitHub..."
-  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+	# 尝试 SSH 连接
+	echo "尝试 SSH 连接到 GitHub..."
+	ssh-keyscan -t ed25519 github.com >>"$HOME/.ssh/known_hosts" 2>/dev/null
 
-  ssh -T git@github.com
-  if [ $? -ne 1 ]; then
-    echo "SSH 连接失败，检查 SSH 密钥..."
+	ssh -T git@github.com
+	if [ $? -ne 1 ]; then
+		echo "SSH 连接失败，检查 SSH 密钥..."
 
-    # 检查是否存在 SSH 密钥
-    existing_ssh_key=$(ls ~/.ssh/*.pub 2>/dev/null | head -n 1)
+		# 检查是否存在 SSH 密钥
+		existing_ssh_key=$(ls ~/.ssh/*.pub 2>/dev/null | head -n 1)
 
-    if [ -z "$existing_ssh_key" ]; then
-      echo "未找到 SSH 公钥，生成新的 SSH 密钥..."
-      read -p "请输入 SSH 密钥文件名的后缀: " key_suffix
-      key_path="$HOME/.ssh/id_ed25519_$key_suffix"
+		if [ -z "$existing_ssh_key" ]; then
+			echo "未找到 SSH 公钥，生成新的 SSH 密钥..."
+			read -p "请输入 SSH 密钥文件名的后缀: " key_suffix
+			key_path="$HOME/.ssh/id_ed25519_$key_suffix"
 
-      # 询问用户是否使用全局邮箱或输入新的邮箱
-      read -p "使用全局邮箱 ($existing_email) 吗？(y/n): " use_global_email
-      if [ "$use_global_email" = "y" ]; then
-        email="$existing_email"
-      else
-        read -p "请输入新的邮箱: " email
-      fi
+			# 询问用户是否使用全局邮箱或输入新的邮箱
+			read -p "使用全局邮箱 ($existing_email) 吗？(y/n): " use_global_email
+			if [ "$use_global_email" = "y" ]; then
+				email="$existing_email"
+			else
+				read -p "请输入新的邮箱: " email
+			fi
 
-      ssh-keygen -t ed25519 -C "$email" -f "$key_path"
-      eval "$(ssh-agent -s)"
-      ssh-add "$key_path"
-      echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
+			ssh-keygen -t ed25519 -C "$email" -f "$key_path"
+			eval "$(ssh-agent -s)"
+			ssh-add "$key_path"
+			echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
 
-      # 调试输出 key_suffix
-      echo "调试：SSH 密钥文件名后缀为 '$key_suffix'"
+			# 调试输出 key_suffix
+			echo "调试：SSH 密钥文件名后缀为 '$key_suffix'"
 
-      # 调用函数添加新生成的 SSH 密钥到配置
-      add_ssh_key_to_config "$key_path" "github.com"
+			# 调用函数添加新生成的 SSH 密钥到配置
+			add_ssh_key_to_config "$key_path" "github.com"
 
-      # 复制 SSH 公钥到剪贴板
-      pbcopy < "$key_path.pub"
-      echo "SSH 公钥已复制到剪贴板，请将其添加到 GitHub。"
-    else
-      echo "已找到以下现有的 SSH 公钥："
-      ls ~/.ssh/*.pub
-      read -p "是否需要新建一个 SSH 密钥？(y/n): " create_new_key
-      if [ "$create_new_key" = "y" ]; then
-        read -p "请输入 SSH 密钥文件名的后缀: " key_suffix
-        key_path="$HOME/.ssh/id_ed25519_$key_suffix"
+			# 复制 SSH 公钥到剪贴板
+			pbcopy <"$key_path.pub"
+			echo "SSH 公钥已复制到剪贴板，请将其添加到 GitHub。"
+		else
+			echo "已找到以下现有的 SSH 公钥："
+			ls ~/.ssh/*.pub
+			read -p "是否需要新建一个 SSH 密钥？(y/n): " create_new_key
+			if [ "$create_new_key" = "y" ]; then
+				read -p "请输入 SSH 密钥文件名的后缀: " key_suffix
+				key_path="$HOME/.ssh/id_ed25519_$key_suffix"
 
-        # 询问用户是否使用全局邮箱或输入新的邮箱
-        read -p "使用全局邮箱 ($existing_email) 吗？(y/n): " use_global_email
-        if [ "$use_global_email" = "y" ]; then
-          email="$existing_email"
-        else
-          read -p "请输入新的邮箱: " email
-        fi
+				# 询问用户是否使用全局邮箱或输入新的邮箱
+				read -p "使用全局邮箱 ($existing_email) 吗？(y/n): " use_global_email
+				if [ "$use_global_email" = "y" ]; then
+					email="$existing_email"
+				else
+					read -p "请输入新的邮箱: " email
+				fi
 
-        ssh-keygen -t ed25519 -C "$email" -f "$key_path"
-        eval "$(ssh-agent -s)"
-        ssh-add "$key_path"
-        echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
+				ssh-keygen -t ed25519 -C "$email" -f "$key_path"
+				eval "$(ssh-agent -s)"
+				ssh-add "$key_path"
+				echo "新的 SSH 密钥已生成，文件名为 id_ed25519_$key_suffix。"
 
-        # 调试输出 key_suffix
-        echo "调试：SSH 密钥文件名后缀为 '$key_suffix'"
+				# 调试输出 key_suffix
+				echo "调试：SSH 密钥文件名后缀为 '$key_suffix'"
 
-        # 调用函数添加新生成的 SSH 密钥到配置
-        add_ssh_key_to_config "$key_path" "github.com"
+				# 调用函数添加新生成的 SSH 密钥到配置
+				add_ssh_key_to_config "$key_path" "github.com"
 
-        # 复制 SSH 公钥到剪贴板
-        pbcopy < "$key_path.pub"
-        echo "SSH 公钥已复制到剪贴板，请将其添加到 GitHub。"
-      fi
-    fi
+				# 复制 SSH 公钥到剪贴板
+				pbcopy <"$key_path.pub"
+				echo "SSH 公钥已复制到剪贴板，请将其添加到 GitHub。"
+			fi
+		fi
 
-    # 检查 GitHub CLI 是否已安装
-    if ! command -v gh &> /dev/null; then
-      echo "GitHub CLI 未安装，正在安装..."
-      # 使用 Homebrew 安装 GitHub CLI
-      if command -v brew &> /dev/null; then
-        brew install gh
-      else
-        echo "Homebrew 未安装，请手动安装 GitHub CLI。"
-        return
-      fi
-    fi
+		# 检查 GitHub CLI 是否已安装
+		if ! command -v gh &>/dev/null; then
+			echo "GitHub CLI 未安装，正在安装..."
+			# 使用 Homebrew 安装 GitHub CLI
+			if command -v brew &>/dev/null; then
+				brew install gh
+			else
+				echo "Homebrew 未安装，请手动安装 GitHub CLI。"
+				return
+			fi
+		fi
 
-    # 执行 GitHub CLI 登录
-    echo "请使用 GitHub CLI 登录..."
-    gh auth login
+		# 执行 GitHub CLI 登录
+		echo "请使用 GitHub CLI 登录..."
+		gh auth login
 
-    # 再次尝试 SSH 连接
-    echo "再次尝试 SSH 连接到 GitHub..."
-    ssh -T git@github.com
-    if [ $? -eq 1 ]; then
-      echo "SSH 连接成功！"
-    else
-      echo "SSH 连接失败，请检查您的 SSH 配置。"
-    fi
-  else
-    echo "SSH 连接成功！"
-  fi
+		# 再次尝试 SSH 连接
+		echo "再次尝试 SSH 连接到 GitHub..."
+		ssh -T git@github.com
+		if [ $? -eq 1 ]; then
+			echo "SSH 连接成功！"
+		else
+			echo "SSH 连接失败，请检查您的 SSH 配置。"
+		fi
+	else
+		echo "SSH 连接成功！"
+	fi
 
 }
 
@@ -696,203 +695,215 @@ configGithub() {
 # 用户可以选择一个现有的 SSH 私钥，并为其设置一个标识符和加密密码。
 # 加密后的密钥以单行形式存储，确保安全性。
 encrypSSH() {
-  local ssh_dir="$HOME/.ssh"
-  local key_files=($(ls $ssh_dir/id_* | grep -v ".pub" 2>/dev/null))
+	local ssh_dir="$HOME/.ssh"
+	local key_files=($(ls $ssh_dir/id_* | grep -v ".pub" 2>/dev/null))
 
-  if [ ${#key_files[@]} -eq 0 ]; then
-    echo "错误：未找到任何 SSH 密钥文件。"
-    return 1
-  fi
+	if [ ${#key_files[@]} -eq 0 ]; then
+		echo "错误：未找到任何 SSH 密钥文件。"
+		return 1
+	fi
 
-  echo "请选择一个 SSH 密钥文件："
-  select private_key_path in "${key_files[@]}"; do
-    if [ -n "$private_key_path" ]; then
-      break
-    else
-      echo "无效选择，请重试。"
-    fi
-  done
+	echo "请选择一个 SSH 密钥文件："
+	select private_key_path in "${key_files[@]}"; do
+		if [ -n "$private_key_path" ]; then
+			break
+		else
+			echo "无效选择，请重试。"
+		fi
+	done
 
-  local key_id
-  while true; do
-    read -p "请输入至少4位的标识符: " key_id
-    if [ ${#key_id} -lt 4 ]; then
-      echo "标识符长度必须至少为4位。"
-      continue
-    fi
+	local key_id
+	while true; do
+		read -p "请输入至少4位的标识符: " key_id
+		if [ ${#key_id} -lt 4 ]; then
+			echo "标识符长度必须至少为4位。"
+			continue
+		fi
 
-    if find_key "$key_id"; then
-      read -p "标识符 '$key_id' 已存在，是否覆盖？(y/n): " overwrite_choice
-      if [ "$overwrite_choice" != "y" ]; then
-        continue
-      fi
-    fi
-    break
-  done
+		if find_key "$key_id"; then
+			read -p "标识符 '$key_id' 已存在，是否覆盖？(y/n): " overwrite_choice
+			if [ "$overwrite_choice" != "y" ]; then
+				continue
+			fi
+		fi
+		break
+	done
 
-  echo "请输入用于加密的密码:"
-  read -s password
+	echo "请输入用于加密的密码:"
+	read -s password
 
-  local encrypted_key=$(openssl enc -aes-256-cbc -salt -in "$private_key_path" -base64 -pass pass:"$password" -pbkdf2)
+	local encrypted_key=$(openssl enc -aes-256-cbc -salt -in "$private_key_path" -base64 -pass pass:"$password" -pbkdf2)
 
-  local single_line_key=$(echo "$encrypted_key" | tr -d '\n')
+	local single_line_key=$(echo "$encrypted_key" | tr -d '\n')
 
-  inject_key_to_script "$key_id" "$single_line_key" "$0"
+	inject_key_to_script "$key_id" "$single_line_key" "$0"
 
-  chmod +x "$0"
+	chmod +x "$0"
 }
 
 # restoreSSH 函数用于恢复加密的 SSH 密钥。
 # 用户可以选择一个标识符，输入解密密码，恢复并配置 SSH 密钥。
 # 恢复后的密钥被写入到用户的 .ssh 目录，并更新 SSH 配置文件。
 restoreSSH() {
-  local password
+	local password
 
-  ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+	ssh-keyscan -t ed25519 github.com >>"$HOME/.ssh/known_hosts" 2>/dev/null
 
-  # Parse and list all identifiers
-  echo "可用的标识符："
-  IFS='|' read -ra keys <<< "$ENCRYPTED_SSH_KEYS"
-  local identifiers=()
-  for key in "${keys[@]}"; do
-    identifier=$(echo "$key" | cut -d':' -f1)
-    identifiers+=("$identifier")
-    echo "$identifier"
-  done
+	# Parse and list all identifiers
+	echo "可用的标识符："
+	IFS='|' read -ra keys <<<"$ENCRYPTED_SSH_KEYS"
+	local identifiers=()
+	for key in "${keys[@]}"; do
+		identifier=$(echo "$key" | cut -d':' -f1)
+		identifiers+=("$identifier")
+		echo "$identifier"
+	done
 
-  # Let user select an identifier
-  local key_id
-  echo "请选择一个标识符："
-  select key_id in "${identifiers[@]}"; do
-    if [ -n "$key_id" ]; then
-      break
-    else
-      echo "无效选择，请重试。"
-    fi
-  done
+	# Let user select an identifier
+	local key_id
+	echo "请选择一个标识符："
+	select key_id in "${identifiers[@]}"; do
+		if [ -n "$key_id" ]; then
+			break
+		else
+			echo "无效选择，请重试。"
+		fi
+	done
 
-  # Set output_key_path based on the selected key_id
-  output_key_path="$HOME/.ssh/id_ed25519_$key_id"
+	# Set output_key_path based on the selected key_id
+	output_key_path="$HOME/.ssh/id_ed25519_$key_id"
 
-  # Extract the encrypted string by matching the identifier
-  local encrypted_key=""
-  for part in "${keys[@]}"; do
-    IFS=':' read -ra sub_parts <<< "$part"
-    if [ "${sub_parts[0]}" == "$key_id" ]; then
-      encrypted_key="${sub_parts[1]}"
-      break
-    fi
-  done
+	# Extract the encrypted string by matching the identifier
+	local encrypted_key=""
+	for part in "${keys[@]}"; do
+		IFS=':' read -ra sub_parts <<<"$part"
+		if [ "${sub_parts[0]}" == "$key_id" ]; then
+			encrypted_key="${sub_parts[1]}"
+			break
+		fi
+	done
 
-  if [ -z "$encrypted_key" ]; then
-    echo "未找到加密密钥，请检查标识符。"
-    return 1
-  fi
+	if [ -z "$encrypted_key" ]; then
+		echo "未找到加密密钥，请检查标识符。"
+		return 1
+	fi
 
-  echo "$encrypted_key" | base64 --decode > /tmp/encrypted_key.tmp
+	echo "$encrypted_key" | base64 --decode >/tmp/encrypted_key.tmp
 
-  if [ ! -s /tmp/encrypted_key.tmp ]; then
-    echo "临时文件创建失败，请检查加密过程。"
-    return 1
-  fi
+	if [ ! -s /tmp/encrypted_key.tmp ]; then
+		echo "临时文件创建失败，请检查加密过程。"
+		return 1
+	fi
 
-  echo "请输入用于解密的密码:"
-  read -s password
+	echo "请输入用于解密的密码:"
+	read -s password
 
-  temp_output_path="/tmp/temp_decrypted_key"
-  if ! openssl enc -d -aes-256-cbc -in /tmp/encrypted_key.tmp -out "$temp_output_path" -pass pass:"$password" -pbkdf2; then
-    echo "解密失败，请检查密码并重试。"
-    rm /tmp/encrypted_key.tmp
-    rm -f "$temp_output_path"  
-    return 1
-  fi
+	temp_output_path="/tmp/temp_decrypted_key"
+	if ! openssl enc -d -aes-256-cbc -in /tmp/encrypted_key.tmp -out "$temp_output_path" -pass pass:"$password" -pbkdf2; then
+		echo "解密失败，请检查密码并重试。"
+		rm /tmp/encrypted_key.tmp
+		rm -f "$temp_output_path"
+		return 1
+	fi
 
-  mv "$temp_output_path" "$output_key_path"
+	mv "$temp_output_path" "$output_key_path"
 
-  rm /tmp/encrypted_key.tmp
+	rm /tmp/encrypted_key.tmp
 
-  chmod 600 "$output_key_path"
+	chmod 600 "$output_key_path"
 
-  echo "密钥成功写入到: $output_key_path"
+	echo "密钥成功写入到: $output_key_path"
 
-  config_file="$HOME/.ssh/config"
-  if ! grep -q "IdentityFile $output_key_path" "$config_file"; then
-    echo -e "\nHost github.com\n  IdentityFile $output_key_path" >> "$config_file"
-    echo "SSH 配置文件已更新。"
-  else
-    echo "SSH 配置文件已包含该密钥配置。"
-  fi
-
+	config_file="$HOME/.ssh/config"
+	if ! grep -q "IdentityFile $output_key_path" "$config_file"; then
+		echo -e "\nHost github.com\n  IdentityFile $output_key_path" >>"$config_file"
+		echo "SSH 配置文件已更新。"
+	else
+		echo "SSH 配置文件已包含该密钥配置。"
+	fi
 }
 
+ipa() {
+	echo "安装ipatool"
+	echo "brew tap majd/repo"
+	echo "brew install ipatool"
+	echo "登录苹果账号"
+	echo "ipatool auth login --emial xxx --password xx"
+	echo "搜索与下载"
+	echo "ipatool search xxx"
+	echo "ipatool download -b com.x.x"
+	echo "如果遇到下面错误："
+	echo "Your Apple ID does not have a license for this app. Download the app on an iOS device to obtain a license."
+	echo "现在设备上下载一个，然后再使用该脚本下载。"
+}
 options=(
-  "-h:usage"
-  "-help:usage"
-  "-v:echo ${version}"
-  "dev:configMaceDevTable"
-  "asopen:openWithAndroidStudio"
-  "importsettings:importSettings"
-  "uploadsettings:uploadSettings"
-  "github:configGithub"
-  "encrypssh:encrypSSH"
-  "restoressh:restoreSSH"
-  "publish:publishNewVersion"
-  "upgrade:upgradeFunc"
+	"-h:usage"
+	"-help:usage"
+	"-v:echo ${version}"
+	"dev:configMaceDevTable"
+	"asopen:openWithAndroidStudio"
+	"importsettings:importSettings"
+	"uploadsettings:uploadSettings"
+	"github:configGithub"
+	"encrypssh:encrypSSH"
+	"restoressh:restoreSSH"
+	"publish:publishNewVersion"
+	"upgrade:upgradeFunc"
+	"ipa:ipa"
 )
 
 # 定义功能和对应的函数
 functions=(
-  "deleterb:deleterb"
-  "opengoogle:openGoogleFolder"
-  "openuserdata:openUserDataFolder"
-  "openjetbrain:openJetBrainFolder"
-  "deletelock:deleteAllLockFiles"
-  "color:showColors"
-  "githelp:gitHelp"
-  "gitcloneother:gitCloneOther"
-  "listallpub:listAllPub"
-  "sshaddall:sshAddAll"
-  "battlenet:battlenet"
-  "howto:howToCreateMace"
-  "sshkey:getSSHKey"
-  "makessh:makessh"
-  "setssh:setssh"
-  "gitglobal:gitGlobal"
-  "pubcleanget:pubCleanGet"
-  "setlunchkey:setLunchKey"
-  "installadb:installadb"
-  "find:find_func"
-  "img:reduceImage"
-  "cleanmac:cleanmac"
-  "resetpwd:resetpwd"
-  "screenchange:screenchange"
-  "ipa:ipa"
-  "test:testFunc"
+	"deleterb:deleterb"
+	"opengoogle:openGoogleFolder"
+	"openuserdata:openUserDataFolder"
+	"openjetbrain:openJetBrainFolder"
+	"deletelock:deleteAllLockFiles"
+	"color:showColors"
+	"githelp:gitHelp"
+	"gitcloneother:gitCloneOther"
+	"listallpub:listAllPub"
+	"sshaddall:sshAddAll"
+	"battlenet:battlenet"
+	"howto:howToCreateMace"
+	"sshkey:getSSHKey"
+	"makessh:makessh"
+	"setssh:setssh"
+	"gitglobal:gitGlobal"
+	"pubcleanget:pubCleanGet"
+	"setlunchkey:setLunchKey"
+	"installadb:installadb"
+	"find:find_func"
+	"img:reduceImage"
+	"cleanmac:cleanmac"
+	"resetpwd:resetpwd"
+	"screenchange:screenchange"
+	"test:testFunc"
 )
 
 while (($# > 0)); do
-  # 如果参数以 .rar 结尾，直接调用 rar() 方法
-  if [[ "$1" == *.rar ]]; then
-    rar "$1"
-    exit
-  fi
+	# 如果参数以 .rar 结尾，直接调用 rar() 方法
+	if [[ "$1" == *.rar ]]; then
+		rar "$1"
+		exit
+	fi
 
-  if [[ "$1" == "-v" ]]; then
-    echo "${version}"
-    exit
-  fi
+	if [[ "$1" == "-v" ]]; then
+		echo "${version}"
+		exit
+	fi
 
-  # 遍历选项和功能数组
-  for entry in "${options[@]}" "${functions[@]}"; do
-    param="${entry%%:*}"
-    func="${entry#*:}"
+	# 遍历选项和功能数组
+	for entry in "${options[@]}" "${functions[@]}"; do
+		param="${entry%%:*}"
+		func="${entry#*:}"
 
-    # 如果参数匹配，则执行相应的函数并退出循环
-    if [[ "$1" == "$param" ]]; then
-      $func "$@"
-      exit
-    fi
-  done
-  POSITIONAL+=("$1")
-  shift
+		# 如果参数匹配，则执行相应的函数并退出循环
+		if [[ "$1" == "$param" ]]; then
+			$func "$@"
+			exit
+		fi
+	done
+	POSITIONAL+=("$1")
+	shift
 done
