@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.173"
+version="0.1.174"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -835,25 +835,13 @@ configGithub() {
 
 }
 unlockJetbrain() {
-	echo "Unlocking JetBrains products..."
-
-	# Step 1: Ensure ~/.mace directory exists
 	mkdir -p "${HOME}/.mace"
-
-	# Step 2: Clone or update treasury
 	git -C "${HOME}/.mace" clone https://github.com/Griffinsin/treasury.git || (cd "${HOME}/.mace/treasury" && git pull)
-
-	# Step 3: Execute scripts
+	mkdir -p "${HOME}/.jetbrainUnlock" && cp -r "${HOME}/.mace/treasury/jetbrainunlock/"* "${HOME}/.jetbrainUnlock/"
 	for script in uninstall.sh install.sh; do
-		if [ -f "${HOME}/.mace/treasury/jetbrainunlock/scripts/$script" ]; then
-			sh "${HOME}/.mace/treasury/jetbrainunlock/scripts/$script"
-		fi
+		[ -f "${HOME}/.jetbrainUnlock/scripts/$script" ] && sh "${HOME}/.jetbrainUnlock/scripts/$script"
 	done
-
-	# Step 4: Copy activation code to clipboard
-	[ -f "${HOME}/.mace/treasury/jetbrainunlock/激活码.txt" ] && pbcopy <"${HOME}/.mace/treasury/jetbrainunlock/激活码.txt"
-
-	# Step 5: Notify user
+	[ -f "${HOME}/.jetbrainUnlock/激活码.txt" ] && pbcopy <"${HOME}/.jetbrainUnlock/激活码.txt"
 	echo "激活码已经复制到粘贴板，可以粘贴到 JetBrains 软件中了。"
 }
 
