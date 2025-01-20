@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.168"
+version="0.1.169"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -888,6 +888,9 @@ encrypSSH() {
 restoreSSH() {
 	local password
 
+	# Ensure the .ssh directory exists
+	mkdir -p "$HOME/.ssh"
+
 	ssh-keyscan -t ed25519 github.com >>"$HOME/.ssh/known_hosts" 2>/dev/null
 
 	# Parse and list all identifiers
@@ -956,6 +959,8 @@ restoreSSH() {
 	echo "密钥成功写入到: $output_key_path"
 
 	config_file="$HOME/.ssh/config"
+	# Ensure the config file exists
+	touch "$config_file"
 	if ! grep -q "IdentityFile $output_key_path" "$config_file"; then
 		echo -e "\nHost github.com\n  IdentityFile $output_key_path" >>"$config_file"
 		echo "SSH 配置文件已更新。"
