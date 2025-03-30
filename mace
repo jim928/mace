@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.176"
+version="0.1.177"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -1005,6 +1005,7 @@ ipa() {
 }
 
 matchsshkey() {
+    # 这个方法用来将sshkey私钥文件与指定的github账号对应起来 注意匹配后需要用对git的url前缀
     # 列出~/.ssh目录下所有的私钥文件（排除.pub结尾的公钥文件和其他配置文件）
     echo "可用的SSH密钥文件："
     key_files=$(find ~/.ssh -type f ! -name "*.pub" ! -name "config" ! -name "known_hosts")
