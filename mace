@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.174"
+version="0.1.175"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -670,7 +670,7 @@ uploadSettings() {
 print_color() {
 	local color_code="$1"
 	local text="$2"
-	echo -e "\033[${color_code}m${text}\033[0m"
+	printf "\033[${color_code}m${text}\033[0m"
 }
 
 openWithAndroidStudio() {
@@ -980,6 +980,14 @@ restoreSSH() {
 	else
 		echo "SSH 配置文件已包含该密钥配置。"
 	fi
+
+	# 添加密钥到ssh-agent
+	if ! ssh-add -l | grep -q "$output_key_path"; then
+		echo "正在将SSH密钥添加到ssh-agent..."
+		ssh-add "$output_key_path"
+	else
+		echo "SSH密钥已经在ssh-agent中"
+	fi
 }
 
 ipa() {
@@ -996,69 +1004,143 @@ ipa() {
 	echo "现在设备上下载一个，然后再使用该脚本下载。"
 }
 
+matchsshkey() {
+    # 列出~/.ssh目录下所有的私钥文件（排除.pub结尾的公钥文件和其他配置文件）
+    echo "可用的SSH密钥文件："
+    key_files=$(find ~/.ssh -type f ! -name "*.pub" ! -name "config" ! -name "known_hosts")
+    
+    if [ -z "$key_files" ]; then
+        echo "未找到SSH密钥文件。请先使用 makessh 命令创建SSH密钥。"
+        return 1
+    fi
+    
+    # 让用户选择私钥文件
+    select key_path in $key_files; do
+        if [ -n "$key_path" ]; then
+            break
+        else
+            echo "无效选择，请重试。"
+        fi
+    done
+    
+    # 获取GitHub用户名
+    read -p "请输入GitHub用户名: " github_username
+    
+    if [ -z "$github_username" ]; then
+        echo "GitHub用户名不能为空"
+        return 1
+    fi
+    
+    # 准备SSH配置
+    config_file="$HOME/.ssh/config"
+    host_config="
+Host github.com-${github_username}
+    HostName github.com
+    User git
+    IdentityFile ${key_path}
+    IdentitiesOnly yes"
+    
+    # 检查配置文件是否存在
+    if [ ! -f "$config_file" ]; then
+        echo "创建新的SSH配置文件"
+        echo "$host_config" > "$config_file"
+    else
+        # 创建临时文件
+        temp_file=$(mktemp)
+        
+        # 使用awk删除旧的配置并保持其他配置不变
+        awk -v user="${github_username}" '
+            BEGIN { skip = 0; }
+            /^Host github.com-'"${github_username}"'$/ { skip = 1; next; }
+            /^Host / { if (skip) { skip = 0; } }
+            !skip { print; }
+        ' "$config_file" > "$temp_file"
+        
+        # 添加新配置到临时文件末尾
+        echo "$host_config" >> "$temp_file"
+        
+        # 替换原文件
+        mv "$temp_file" "$config_file"
+        chmod 600 "$config_file"
+    fi
+    
+    # 添加密钥到ssh-agent
+    if ! ssh-add -l | grep -q "$key_path"; then
+        echo "正在将SSH密钥添加到ssh-agent..."
+        ssh-add "$key_path"
+    else
+        echo "SSH密钥已经在ssh-agent中"
+    fi
+    
+    echo "SSH配置已更新。使用以下git clone命令来使用此SSH密钥："
+    printf "git clone \033[33mgit@github.com-${github_username}\033[0m:${github_username}/repository.git\n"
+    echo "注意：必须使用带有用户名后缀的地址 (github.com-${github_username})，这样才能使用正确的SSH密钥"
+}
+
 options=(
-	"-h:usage"
-	"-help:usage"
-	"-v:echo ${version}"
-	"dev:configMaceDevTable"
-	"asopen:openWithAndroidStudio"
-	"importsettings:importSettings"
-	"uploadsettings:uploadSettings"
-	"github:configGithub"
-	"encrypssh:encrypSSH"
-	"restoressh:restoreSSH"
-	"publish:publishNewVersion"
-	"upgrade:upgradeFunc"
-	"ipa:ipa"
-	"deleterb:deleterb"
-	"opengoogle:openGoogleFolder"
-	"openuserdata:openUserDataFolder"
-	"openjetbrain:openJetBrainFolder"
-	"deletelock:deleteAllLockFiles"
-	"color:showColors"
-	"gitcloneother:gitCloneOther"
-	"listallpub:listAllPub"
-	"battlenet:battlenet"
-	"howto:howToCreateMace"
-	"sshkey:getSSHKey"
-	"makessh:makessh"
-	"setssh:setssh"
-	"gitglobal:gitGlobal"
-	"pubcleanget:pubCleanGet"
-	"setlunchkey:setLunchKey"
-	"installadb:installadb"
-	"find:find_func"
-	"img:reduceImage"
-	"cleanmac:cleanmac"
-	"resetpwd:resetpwd"
-	"screenchange:screenchange"
-	"pycharm:pycharmOpen"
-	"unlockjetbrain:unlockJetbrain"
+    "-h:usage"
+    "-help:usage"
+    "-v:echo ${version}"
+    "dev:configMaceDevTable"
+    "asopen:openWithAndroidStudio"
+    "importsettings:importSettings"
+    "uploadsettings:uploadSettings"
+    "github:configGithub"
+    "encrypssh:encrypSSH"
+    "restoressh:restoreSSH"
+    "publish:publishNewVersion"
+    "upgrade:upgradeFunc"
+    "ipa:ipa"
+    "deleterb:deleterb"
+    "opengoogle:openGoogleFolder"
+    "openuserdata:openUserDataFolder"
+    "openjetbrain:openJetBrainFolder"
+    "deletelock:deleteAllLockFiles"
+    "color:showColors"
+    "gitcloneother:gitCloneOther"
+    "listallpub:listAllPub"
+    "battlenet:battlenet"
+    "howto:howToCreateMace"
+    "sshkey:getSSHKey"
+    "makessh:makessh"
+    "setssh:setssh"
+    "gitglobal:gitGlobal"
+    "pubcleanget:pubCleanGet"
+    "setlunchkey:setLunchKey"
+    "installadb:installadb"
+    "find:find_func"
+    "img:reduceImage"
+    "cleanmac:cleanmac"
+    "resetpwd:resetpwd"
+    "screenchange:screenchange"
+    "pycharm:pycharmOpen"
+    "unlockjetbrain:unlockJetbrain"
+    "matchsshkey:matchsshkey"
 )
 
 while (($# > 0)); do
-	# 如果参数以 .rar 结尾，直接调用 rar() 方法
-	if [[ $1 == *.rar ]]; then
-		rar "$1"
-		exit
-	fi
+    # 如果参数以 .rar 结尾，直接调用 rar() 方法
+    if [[ $1 == *.rar ]]; then
+        rar "$1"
+        exit
+    fi
 
-	if [[ $1 == "-v" ]]; then
-		echo "${version}"
-		exit
-	fi
+    if [[ $1 == "-v" ]]; then
+        echo "${version}"
+        exit
+    fi
 
-	# 遍历选项和功能数组
-	for entry in "${options[@]}"; do
-		param="${entry%%:*}"
-		func="${entry#*:}"
+    # 遍历选项和功能数组
+    for entry in "${options[@]}"; do
+        param="${entry%%:*}"
+        func="${entry#*:}"
 
-		# 如果参数匹配，则执行相应的函数并退出循环
-		if [[ $1 == "$param" ]]; then
-			$func "$@"
-			exit
-		fi
-	done
-	POSITIONAL+=("$1")
-	shift
+        # 如果参数匹配，则执行相应的函数并退出循环
+        if [[ $1 == "$param" ]]; then
+            $func "$@"
+            exit
+        fi
+    done
+    POSITIONAL+=("$1")
+    shift
 done
