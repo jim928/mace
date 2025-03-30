@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="0.1.175"
+version="0.1.176"
 
 script_name=$(basename "$0")
 jim928Path=$(brew --repo)/Library/Taps/jim928
@@ -1024,45 +1024,60 @@ matchsshkey() {
     done
     
     # 获取GitHub用户名
-    read -p "请输入GitHub用户名: " github_username
-    
-    if [ -z "$github_username" ]; then
-        echo "GitHub用户名不能为空"
-        return 1
-    fi
+    read -p "请输入GitHub用户名 (直接回车将设置为默认GitHub账号): " github_username
     
     # 准备SSH配置
     config_file="$HOME/.ssh/config"
-    host_config="
+    if [ -z "$github_username" ]; then
+        # 如果用户直接回车，设置为默认GitHub账号
+        host_config="
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ${key_path}
+    IdentitiesOnly yes"
+        
+        # 清理旧的默认配置
+        temp_file=$(mktemp)
+        awk '
+            BEGIN { skip = 0; }
+            /^Host github.com$/ { skip = 1; next; }
+            /^Host / { if (skip) { skip = 0; } }
+            !skip { print; }
+        ' "$config_file" > "$temp_file" 2>/dev/null || true
+    else
+        # 设置特定用户的配置
+        host_config="
 Host github.com-${github_username}
     HostName github.com
     User git
     IdentityFile ${key_path}
     IdentitiesOnly yes"
+        
+        # 清理旧的用户特定配置
+        temp_file=$(mktemp)
+        awk -v user="${github_username}" '
+            BEGIN { skip = 0; }
+            /^Host github.com-'"${github_username}"'$/ { skip = 1; next; }
+            /^Host / { if (skip) { skip = 0; } }
+            !skip { print; }
+        ' "$config_file" > "$temp_file" 2>/dev/null || true
+    fi
     
     # 检查配置文件是否存在
     if [ ! -f "$config_file" ]; then
         echo "创建新的SSH配置文件"
         echo "$host_config" > "$config_file"
     else
-        # 创建临时文件
-        temp_file=$(mktemp)
-        
-        # 使用awk删除旧的配置并保持其他配置不变
-        awk -v user="${github_username}" '
-            BEGIN { skip = 0; }
-            /^Host github.com-'"${github_username}"'$/ { skip = 1; next; }
-            /^Host / { if (skip) { skip = 0; } }
-            !skip { print; }
-        ' "$config_file" > "$temp_file"
-        
         # 添加新配置到临时文件末尾
         echo "$host_config" >> "$temp_file"
         
         # 替换原文件
         mv "$temp_file" "$config_file"
-        chmod 600 "$config_file"
     fi
+    
+    # 设置文件权限
+    chmod 600 "$config_file"
     
     # 添加密钥到ssh-agent
     if ! ssh-add -l | grep -q "$key_path"; then
@@ -1072,9 +1087,14 @@ Host github.com-${github_username}
         echo "SSH密钥已经在ssh-agent中"
     fi
     
-    echo "SSH配置已更新。使用以下git clone命令来使用此SSH密钥："
-    printf "git clone \033[33mgit@github.com-${github_username}\033[0m:${github_username}/repository.git\n"
-    echo "注意：必须使用带有用户名后缀的地址 (github.com-${github_username})，这样才能使用正确的SSH密钥"
+    if [ -z "$github_username" ]; then
+        echo "SSH配置已更新。这个密钥被设置为默认GitHub账号。"
+        printf "现在可以直接使用: \033[33mgit clone git@github.com:owner/repository.git\033[0m\n"
+    else
+        echo "SSH配置已更新。使用以下git clone命令来使用此SSH密钥："
+        printf "git clone \033[33mgit@github.com-${github_username}\033[0m:${github_username}/repository.git\n"
+        echo "注意：必须使用带有用户名后缀的地址 (github.com-${github_username})，这样才能使用正确的SSH密钥"
+    fi
 }
 
 options=(
